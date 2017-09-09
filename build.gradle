@@ -21,7 +21,7 @@ sourceSets {
             srcDirs = ['src/']
         }
         resources {
-            srcDirs = ['src/sprites']
+            srcDirs = ['sprites', 'src/resources']
         }
     }
 }
@@ -41,7 +41,7 @@ jar {
     manifest {
         attributes 'Main-Class': 'TestCeldas'
     }
-    version =  '0.5.0'
+    version = '0.5.0'
 }
 
 dependencies {

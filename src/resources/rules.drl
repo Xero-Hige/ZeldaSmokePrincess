@@ -1,0 +1,188 @@
+package ar.higesoft;
+import ar.fi.uba.celdas.Perception;
+
+dialect  "mvel"
+
+declare Choices
+    created: Boolean = true
+    mustGoRight: Boolean = false
+    canGoRight: Boolean = false
+
+    mustGoLeft: Boolean = false
+    canGoLeft: Boolean = false
+
+    mustGoUp: Boolean = false
+    canGoUp: Boolean = false
+
+    mustGoDown: Boolean = false
+    canGoDown: Boolean = false
+
+    mustAttack: Boolean = false
+    canAttack: Boolean = false
+
+    goRight: Boolean = false
+    goLeft: Boolean = false
+    goDown: Boolean = false
+    goUp: Boolean = false
+    attack: Boolean = false
+end
+
+
+rule creation
+    when
+        not Choices(created)
+    then
+        insert(new Choices())
+        System.out.println("Created");
+end
+
+rule "Must go right Key"
+    when
+        $choice:Choices(created , !mustGoRight)
+        world:WorldParser (player_column < key_column)
+    then
+        modify($choice){setMustGoRight(true)}
+end
+
+rule "Can go right Key"
+    when
+        $choice:Choices(created,!canGoRight)
+        world:WorldParser (atPlayerRight != "2" , atPlayerRight != "w")
+    then
+        modify($choice){setCanGoRight(true)}
+end
+
+rule "Go right Key"
+    when
+        world:WorldParser()
+        $choice:Choices(mustGoRight,canGoRight,!goRight)
+    then
+        modify($choice){setGoRight(true)}
+end
+
+
+rule "Must go Left Key"
+    when
+        $choice:Choices(created,!mustGoLeft)
+        world:WorldParser (player_column > key_column)
+    then
+        modify($choice){setMustGoLeft(true)}
+end
+
+rule "Can go Left Key"
+    when
+        $choice:Choices(created,canGoLeft)
+        world:WorldParser (atPlayerLeft != "2" , atPlayerLeft != "w")
+    then
+        modify($choice){setCanGoLeft(true)}
+end
+
+rule "Go Left Key"
+    when
+        world:WorldParser()
+        $choice:Choices(mustGoLeft,canGoLeft,!goLeft)
+    then
+        modify($choice){setGoLeft(true)}
+end
+
+
+rule "Must go Down Key"
+    when
+        $choice:Choices(created,!mustGoDown)
+        world:WorldParser (player_row < key_row)
+    then
+        modify($choice){setMustGoDown(true)}
+end
+
+rule "Can go Down Key"
+    when
+        $choice:Choices(created,!canGoDown)
+        world:WorldParser (atPlayerDown != "2" , atPlayerDown != "w")
+    then
+        modify($choice){setCanGoDown(true)}
+end
+
+rule "Go Down Key"
+    when
+        world:WorldParser()
+        $choice:Choices(mustGoDown,canGoDown,!goDown)
+    then
+        modify($choice){setGoDown(true)}
+end
+
+
+rule "Must go Up Key"
+    when
+        $choice:Choices(created,!mustGoUp)
+        world:WorldParser (player_row > key_row)
+    then
+        modify($choice){setMustGoUp(true)}
+end
+
+rule "Can go Up Key"
+    when
+        $choice:Choices(created,!canGoUp)
+        world:WorldParser (atPlayerUp != "2" , atPlayerUp != "w")
+    then
+        modify($choice){setCanGoUp(true)}
+end
+
+rule "Go Up Key"
+    when
+        world:WorldParser()
+        $choice:Choices(mustGoUp,canGoUp,!goUp)
+    then
+        modify($choice){setGoUp(true)}
+end
+
+rule "Can Atack"
+    when
+        $choice:Choices(created,canAttack)
+        world:WorldParser(facingElement == "2")
+    then
+        modify($choice){setAttack(true)}
+end
+
+
+rule "Set Atack"
+    when
+        choice:Choices(canAttack)
+        world:WorldParser()
+    then
+        world.setAction(0);
+end
+
+rule "Set Left"
+    when
+        choice:Choices(!canAttack,goLeft)
+        world:WorldParser()
+    then
+        world.setAction(1);
+end
+
+rule "Set Right"
+    when
+        choice:Choices(!canAttack,goRight)
+        world:WorldParser()
+    then
+        world.setAction(2);
+end
+
+rule "Set Down"
+    when
+        choice:Choices(!canAttack,goDown)
+        world:WorldParser()
+    then
+        world.setAction(3);
+end
+
+rule "Set Up"
+    when
+        choice:Choices(!canAttack,goUp)
+        world:WorldParser()
+    then
+        world.setAction(4);
+end
+
+
+
