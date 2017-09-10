@@ -21,10 +21,10 @@ import java.util.ArrayList;
  */
 public class WorldParser {
 
-    public static int UP = 0;
-    public static int DOWN = 0;
-    public static int LEFT = 0;
-    public static int RIGHT = 0;
+    public static final int UP = 0;
+    public static final int DOWN = 1;
+    public static final int LEFT = 2;
+    public static final int RIGHT = 3;
     private int player_row;
     private int player_column;
     private int key_row;
@@ -33,10 +33,16 @@ public class WorldParser {
     private int door_column;
     private boolean has_key;
     private ArrayList<ArrayList<Integer>> steps;
+    private int direction;
+
+    private Perception perception = null;
+
+    private int action = 0;
 
     public WorldParser(Perception world) {
 
         steps = new ArrayList<>(world.getLevelHeight());
+        direction = LEFT;
 
         has_key = false;
 
@@ -79,6 +85,33 @@ public class WorldParser {
         }
     }
 
+    public char getFacingElement() {
+        switch (direction) {
+            case UP:
+                return getAtPlayerUp();
+            case DOWN:
+                return getAtPlayerDown();
+            case LEFT:
+                return getAtPlayerLeft();
+            case RIGHT:
+                return getAtPlayerRight();
+            default:
+                return '-';
+        }
+    }
+
+    public int getAction() {
+        return action;
+    }
+
+    public void setAction(int action) {
+        this.action = action;
+    }
+
+    public int getDirection() {
+        return direction;
+    }
+
     public int getPlayer_column() {
         return player_column;
     }
@@ -88,7 +121,31 @@ public class WorldParser {
 
     }
 
-    public boolean isHas_key() {
+    public char getAtPlayerLeft() {
+        if (perception == null)
+            return '.';
+        return perception.getAt(player_row, player_column - 1);
+    }
+
+    public char getAtPlayerRight() {
+        if (perception == null)
+            return '.';
+        return perception.getAt(player_row, player_column + 1);
+    }
+
+    public char getAtPlayerUp() {
+        if (perception == null)
+            return '.';
+        return perception.getAt(player_row - 1, player_column);
+    }
+
+    public char getAtPlayerDown() {
+        if (perception == null)
+            return '.';
+        return perception.getAt(player_row + 1, player_column);
+    }
+
+    public boolean has_key() {
         return has_key;
     }
 
@@ -110,6 +167,9 @@ public class WorldParser {
     }
 
     public void updateWorld(Perception world) {
+
+        perception = world;
+
         for (int i = 0; i < world.getLevelHeight(); i++) {
             for (int j = 0; j < world.getLevelWidth(); j++) {
 
@@ -126,17 +186,17 @@ public class WorldParser {
         }
     }
 
-    public void move(int direction) {
-        if (direction == UP)
+    public void move(int move_direction) {
+        if (move_direction == UP)
             player_row -= 1;
 
-        if (direction == DOWN)
+        if (move_direction == DOWN)
             player_row += 1;
 
-        if (direction == LEFT)
+        if (move_direction == LEFT)
             player_column -= 1;
 
-        if (direction == RIGHT)
+        if (move_direction == RIGHT)
             player_column += 1;
 
         steps.get(player_column).set(player_row, steps.get(player_column).get(player_row) + 1);
@@ -145,7 +205,7 @@ public class WorldParser {
             has_key = true;
         }
 
-
+        direction = move_direction;
         System.out.printf("[%d,%d]", player_row, player_column);
     }
 }
