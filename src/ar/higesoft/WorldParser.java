@@ -21,10 +21,11 @@ import java.util.ArrayList;
  */
 public class WorldParser {
 
-    public static final int UP = 0;
-    public static final int DOWN = 1;
-    public static final int LEFT = 2;
-    public static final int RIGHT = 3;
+    public static final int UP = 4;
+    public static final int DOWN = 3;
+    public static final int LEFT = 1;
+    public static final int RIGHT = 2;
+
     private int player_row;
     private int player_column;
     private int key_row;
@@ -101,11 +102,30 @@ public class WorldParser {
     }
 
     public int getAction() {
+        System.out.println("Facing:");
+        System.out.println(this.direction);
+        System.out.println(getFacingElement());
+
+        System.out.println(perception);
+
         return action;
     }
 
     public void setAction(int action) {
         this.action = action;
+        switch (action) {
+            case 1:
+                direction = LEFT;
+                break;
+            case 2:
+                direction = RIGHT;
+                break;
+            case 3:
+                direction = DOWN;
+                break;
+            case 4:
+                direction = UP;
+        }
     }
 
     public int getDirection() {
@@ -176,9 +196,19 @@ public class WorldParser {
                 char item = world.getAt(i, j);
 
                 switch (item) {
+                    case '?':
                     case 'A':
                         player_column = j;
                         player_row = i;
+
+                        if (player_column == key_column && player_row == key_row) {
+                            has_key = true;
+                        }
+
+                        key_row = door_row;
+                        key_column = door_column;
+
+                        steps.get(i).set(j, steps.get(i).get(j) + 1);
                         return;
                 }
 
@@ -186,6 +216,21 @@ public class WorldParser {
         }
     }
 
+    public int getTimesVisitedUp() {
+        return steps.get(player_row - 1).get(player_column);
+    }
+
+    public int getTimesVisitedDown() {
+        return steps.get(player_row + 1).get(player_column);
+    }
+
+    public int getTimesVisitedLeft() {
+        return steps.get(player_row).get(player_column - 1);
+    }
+
+    public int getTimesVisitedRight() {
+        return steps.get(player_row).get(player_column + 1);
+    }
     public void move(int move_direction) {
         if (move_direction == UP)
             player_row -= 1;
@@ -201,9 +246,6 @@ public class WorldParser {
 
         steps.get(player_column).set(player_row, steps.get(player_column).get(player_row) + 1);
 
-        if (player_column == key_column && player_row == key_row) {
-            has_key = true;
-        }
 
         direction = move_direction;
         System.out.printf("[%d,%d]", player_row, player_column);

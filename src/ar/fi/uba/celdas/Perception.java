@@ -61,7 +61,9 @@ public class Perception {
                         case "07":
                             this.level[j][i] = 'A';
                             break;
+                        case "310":
                         case "311":
+                        case "312":
                             this.level[j][i] = '2';
                             break;
                         case "23":
