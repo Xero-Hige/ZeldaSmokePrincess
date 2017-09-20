@@ -103,11 +103,6 @@ public class WorldParser {
     }
 
     public int getAction() {
-        System.out.println("Facing:");
-        System.out.println(getFacingElement());
-        System.out.println(perception.getAt(key_row, key_column));
-        System.out.println(perception);
-
         return action;
     }
 
@@ -283,19 +278,19 @@ public class WorldParser {
         }
     }
 
-    private int getTimesVisitedUp() {
+    public int getTimesVisitedUp() {
         return steps.get(player_row - 1).get(player_column);
     }
 
-    private int getTimesVisitedDown() {
+    public int getTimesVisitedDown() {
         return steps.get(player_row + 1).get(player_column);
     }
 
-    private int getTimesVisitedLeft() {
+    public int getTimesVisitedLeft() {
         return steps.get(player_row).get(player_column - 1);
     }
 
-    private int getTimesVisitedRight() {
+    public int getTimesVisitedRight() {
         return steps.get(player_row).get(player_column + 1);
     }
 
