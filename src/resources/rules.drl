@@ -5,17 +5,11 @@ dialect  "mvel"
 
 declare Choices
     created: Boolean = true
+
     mustGoRight: Boolean = false
-    canGoRight: Boolean = false
-
     mustGoLeft: Boolean = false
-    canGoLeft: Boolean = false
-
     mustGoUp: Boolean = false
-    canGoUp: Boolean = false
-
     mustGoDown: Boolean = false
-    canGoDown: Boolean = false
 
     mustAttack: Boolean = false
     canAttack: Boolean = false
@@ -25,10 +19,10 @@ declare Choices
     shouldGoLeft: Boolean = false
     shouldGoRight: Boolean = false
 
-    enemyRight: Boolean = false
-    enemyLeft: Boolean = false
     enemyUp: Boolean = false
     enemyDown: Boolean = false
+    enemyRight: Boolean = false
+    enemyLeft: Boolean = false
 
     goRight: Boolean = false
     goLeft: Boolean = false
@@ -46,67 +40,34 @@ rule creation
 end
 
 
-rule "Can go right"
-    when
-        $choice:Choices(created,!enemyRight,!canGoRight)
-        world:WorldParser (atPlayerRight != "w")
-    then
-        modify($choice){setCanGoRight(true)}
-end
-
-rule "Can go Left"
-    when
-        $choice:Choices(created,!enemyLeft,!canGoLeft)
-        world:WorldParser (atPlayerLeft != "w")
-    then
-        modify($choice){setCanGoLeft(true)}
-end
-
-rule "Can go Down"
-    when
-        $choice:Choices(created,!enemyDown, !canGoDown)
-        world:WorldParser (atPlayerDown != "w")
-    then
-        modify($choice){setCanGoDown(true)}
-end
-
-rule "Can go Up"
-    when
-        $choice:Choices(created,!enemyUp,!canGoUp)
-        world:WorldParser (atPlayerUp != "2" , atPlayerUp != "w")
-    then
-        modify($choice){setCanGoUp(true)}
-end
-
-
 rule "Must go right Key"
     when
-        $choice:Choices(created ,!enemyRight , !mustGoRight)
-        world:WorldParser (player_column < key_column,!has_key)
+        $choice:Choices(created , !mustGoRight)
+        world:WorldParser (player_column < key_column,!hasKey,!enemyRight)
     then
         modify($choice){setMustGoRight(true)}
 end
 
 rule "Must go Left Key"
     when
-        $choice:Choices(created,!enemyLeft , !mustGoLeft)
-        world:WorldParser (player_column > key_column,!has_key)
+        $choice:Choices(created, !mustGoLeft)
+        world:WorldParser (player_column > key_column,!hasKey,!enemyLeft)
     then
         modify($choice){setMustGoLeft(true)}
 end
 
 rule "Must go Down Key"
     when
-        $choice:Choices(created,!enemyDown,!mustGoDown)
-        world:WorldParser (player_row < key_row,!has_key)
+        $choice:Choices(created,!mustGoDown)
+        world:WorldParser (player_row < key_row,!hasKey,!enemyDown)
     then
         modify($choice){setMustGoDown(true)}
 end
 
 rule "Must go Up Key"
     when
-        $choice:Choices(created,!enemyUp,!mustGoUp)
-        world:WorldParser (player_row > key_row,!has_key)
+        $choice:Choices(created,!mustGoUp)
+        world:WorldParser (player_row > key_row,!hasKey,!enemyUp)
     then
         modify($choice){setMustGoUp(true)}
 end
@@ -114,32 +75,32 @@ end
 
 rule "Must go right Door"
     when
-        $choice:Choices(created ,!enemyRight , !mustGoRight)
-        world:WorldParser (player_column < door_column,has_key)
+        $choice:Choices(created , !mustGoRight)
+        world:WorldParser (player_column < door_column,hasKey,!enemyRight)
     then
         modify($choice){setMustGoRight(true)}
 end
 
 rule "Must go Left Door"
     when
-        $choice:Choices(created,!enemyLeft , !mustGoLeft)
-        world:WorldParser (player_column > door_column,has_key)
+        $choice:Choices(created,!mustGoLeft)
+        world:WorldParser (player_column > door_column,hasKey,!enemyLeft)
     then
         modify($choice){setMustGoLeft(true)}
 end
 
 rule "Must go Down Door"
     when
-        $choice:Choices(created,!enemyDown,!mustGoDown)
-        world:WorldParser (player_row < door_row,has_key)
+        $choice:Choices(created,!mustGoDown)
+        world:WorldParser (player_row < door_row,hasKey,!enemyDown)
     then
         modify($choice){setMustGoDown(true)}
 end
 
 rule "Must go Up Door"
     when
-        $choice:Choices(created,!enemyUp,!mustGoUp)
-        world:WorldParser (player_row > door_row,has_key)
+        $choice:Choices(created,!mustGoUp)
+        world:WorldParser (player_row > door_row,hasKey,!enemyUp)
     then
         modify($choice){setMustGoUp(true)}
 end
@@ -147,32 +108,32 @@ end
 
 rule "Go right"
     when
-        world:WorldParser()
-        $choice:Choices(mustGoRight,canGoRight,!goRight)
+        world:WorldParser(canGoRight)
+        $choice:Choices(mustGoRight,!goRight)
     then
         modify($choice){setGoRight(true)}
 end
 
 rule "Go Left"
     when
-        world:WorldParser()
-        $choice:Choices(mustGoLeft,canGoLeft,!goLeft)
+        world:WorldParser(canGoLeft)
+        $choice:Choices(mustGoLeft,!goLeft)
     then
         modify($choice){setGoLeft(true)}
 end
 
 rule "Go Down"
     when
-        world:WorldParser()
-        $choice:Choices(mustGoDown,canGoDown,!goDown)
+        world:WorldParser(canGoDown)
+        $choice:Choices(mustGoDown,!goDown)
     then
         modify($choice){setGoDown(true)}
 end
 
 rule "Go Up"
     when
-        world:WorldParser()
-        $choice:Choices(mustGoUp,canGoUp,!goUp)
+        world:WorldParser(canGoUp)
+        $choice:Choices(mustGoUp,!goUp)
     then
         modify($choice){setGoUp(true)}
 end
@@ -190,7 +151,7 @@ end
 rule "Enemy Up"
     when
         $choice:Choices(created,!enemyUp)
-        world:WorldParser(atPlayerUp == "2")
+        world:WorldParser(enemyUp)
     then
         System.out.println("UP"+world.getAtPlayerUp());
 
@@ -219,7 +180,7 @@ end
 rule "Enemy Left"
     when
         $choice:Choices(created,!enemyLeft)
-        world:WorldParser(atPlayerLeft == "2")
+        world:WorldParser(enemyLeft)
     then
         System.out.println("LEFT"+world.getAtPlayerLeft());
 
@@ -233,7 +194,7 @@ end
 rule "Enemy Right"
     when
         $choice:Choices(created,!enemyRight)
-        world:WorldParser(atPlayerRight == "2")
+        world:WorldParser(enemyRight)
     then
             System.out.println("RIGHT"+world.getAtPlayerRight());
 
@@ -247,63 +208,34 @@ end
 
 rule "Trapped Right"
     when
-        $choice:Choices(mustGoRight,!mustGoDown,!canGoRight)
+        world:WorldParser(!canGoRight)
+        $choice:Choices(mustGoRight,!mustGoDown)
     then
         modify($choice){setMustGoDown(true)}
 end
 
 rule "Trapped Down"
     when
-        $choice:Choices(mustGoDown,!mustGoLeft,!canGoDown)
+        world:WorldParser(!canGoDown)
+        $choice:Choices(mustGoDown,!mustGoLeft)
     then
         modify($choice){setMustGoLeft(true)}
 end
 
 rule "Trapped Left"
     when
-        $choice:Choices(mustGoLeft,!mustGoUp,!canGoLeft)
+        world:WorldParser(!canGoLeft)
+        $choice:Choices(mustGoLeft,!mustGoUp)
     then
         modify($choice){setMustGoUp(true)}
 end
 
 rule "Trapped Up"
     when
-        $choice:Choices(mustGoUp,!mustGoRight,!canGoUp)
+        world:WorldParser(!canGoUp)
+        $choice:Choices(mustGoUp,!mustGoRight)
     then
         modify($choice){setMustGoRight(true)}
-end
-
-
-rule "Should go down?"
-    when
-        $choice:Choices(created,!shouldGoDown)
-        world:WorldParser(timesVisitedDown <= timesVisitedLeft , timesVisitedDown <= timesVisitedRight , timesVisitedDown <= timesVisitedUp)
-    then
-        modify($choice){setShouldGoDown(true)}
-end
-
-rule "Should go up?"
-    when
-        $choice:Choices(created,!shouldGoUp)
-        world:WorldParser(timesVisitedUp <= timesVisitedLeft , timesVisitedUp <= timesVisitedRight , timesVisitedUp <= timesVisitedDown)
-    then
-        modify($choice){setShouldGoUp(true)}
-end
-
-rule "Should go left?"
-    when
-        $choice:Choices(created,!shouldGoLeft)
-        world:WorldParser(timesVisitedLeft <= timesVisitedDown, timesVisitedLeft <= timesVisitedRight , timesVisitedLeft <= timesVisitedUp)
-    then
-        modify($choice){setShouldGoLeft(true)}
-end
-
-rule "Should go right?"
-    when
-        $choice:Choices(created,!shouldGoRight)
-        world:WorldParser(timesVisitedRight <= timesVisitedLeft , timesVisitedRight <= timesVisitedDown , timesVisitedRight <= timesVisitedUp)
-    then
-        modify($choice){setShouldGoRight(true)}
 end
 
 
@@ -320,8 +252,8 @@ end
 rule "Set Left"
     salience 100
     when
-        choice:Choices(!canAttack,goLeft,shouldGoLeft)
-        world:WorldParser()
+        choice:Choices(!canAttack,goLeft)
+        world:WorldParser(shouldGoLeft)
     then
         world.setAction(1);
 end
@@ -329,8 +261,8 @@ end
 rule "Set Right"
     salience 100
     when
-        choice:Choices(!canAttack,goRight,shouldGoRight)
-        world:WorldParser()
+        choice:Choices(!canAttack,goRight)
+        world:WorldParser(shouldGoRight)
     then
         world.setAction(2);
 end
@@ -338,8 +270,8 @@ end
 rule "Set Down"
     salience 100
     when
-        choice:Choices(!canAttack,goDown,shouldGoDown)
-        world:WorldParser()
+        choice:Choices(!canAttack,goDown)
+        world:WorldParser(shouldGoDown)
     then
         world.setAction(3);
 end
@@ -347,8 +279,8 @@ end
 rule "Set Up"
     salience 100
     when
-        choice:Choices(!canAttack,goUp,shouldGoUp)
-        world:WorldParser()
+        choice:Choices(!canAttack,goUp)
+        world:WorldParser(shouldGoUp)
     then
         world.setAction(4);
 end
@@ -357,8 +289,8 @@ end
 rule "Semi Set Left"
     salience 50
     when
-        choice:Choices(!canAttack,canGoLeft,shouldGoLeft)
-        world:WorldParser()
+        choice:Choices(!canAttack)
+        world:WorldParser(canGoLeft,shouldGoLeft)
     then
         world.setAction(1);
 end
@@ -366,8 +298,8 @@ end
 rule "Semi Right"
     salience 50
     when
-        choice:Choices(!canAttack,canGoRight,shouldGoRight)
-        world:WorldParser()
+        choice:Choices(!canAttack)
+        world:WorldParser(canGoRight,shouldGoRight)
     then
         world.setAction(2);
 end
@@ -375,8 +307,8 @@ end
 rule "Semi Down"
     salience 50
     when
-        choice:Choices(!canAttack,canGoDown,shouldGoDown)
-        world:WorldParser()
+        choice:Choices(!canAttack)
+        world:WorldParser(canGoDown,shouldGoDown)
     then
         world.setAction(3);
 end
@@ -384,8 +316,8 @@ end
 rule "Semi Up"
     salience 50
     when
-        choice:Choices(!canAttack,canGoUp,shouldGoUp)
-        world:WorldParser()
+        choice:Choices(!canAttack)
+        world:WorldParser(canGoUp,shouldGoUp)
     then
         world.setAction(4);
 end
