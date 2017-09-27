@@ -32,10 +32,10 @@ import java.io.Reader;
 
 public class Runner {
 
-    private WorldParser world = null;
+    private WorldStatus world = null;
     private Perception perception = null;
 
-    public void setWorld(WorldParser world) {
+    public void setWorld(WorldStatus world) {
         this.world = world;
     }
 

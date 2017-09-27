@@ -19,7 +19,7 @@ import java.util.ArrayList;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses
  */
-public class WorldParser {
+public class WorldStatus {
 
     public static final int UP = 4;
     public static final int DOWN = 3;
@@ -40,7 +40,7 @@ public class WorldParser {
 
     private int action = 0;
 
-    public WorldParser(Perception world) {
+    public WorldStatus(Perception world) {
 
         steps = new ArrayList<>(0);
         direction = LEFT;
@@ -197,33 +197,11 @@ public class WorldParser {
         return (!getEnemyRight()) && (getAtPlayerRight() != 'w');
     }
 
-    public boolean getShouldGoUp() {
-        return getTimesVisitedUp() <= getTimesVisitedLeft() &&
-                getTimesVisitedUp() <= getTimesVisitedRight() &&
-                getTimesVisitedUp() <= getTimesVisitedDown();
-    }
-
-    public boolean getShouldGoDown() {
-        return getTimesVisitedDown() <= getTimesVisitedLeft() &&
-                getTimesVisitedDown() <= getTimesVisitedRight() &&
-                getTimesVisitedDown() <= getTimesVisitedUp();
-    }
-
-    public boolean getShouldGoRight() {
-        return getTimesVisitedRight() <= getTimesVisitedLeft() &&
-                getTimesVisitedRight() <= getTimesVisitedUp() &&
-                getTimesVisitedRight() <= getTimesVisitedDown();
-    }
-
-    public boolean getShouldGoLeft() {
-        return getTimesVisitedLeft() <= getTimesVisitedUp() &&
-                getTimesVisitedLeft() <= getTimesVisitedRight() &&
-                getTimesVisitedLeft() <= getTimesVisitedDown();
-    }
 
     public boolean getHasKey() {
         return has_key;
     }
+
 
     public int getKey_row() {
 
@@ -240,6 +218,23 @@ public class WorldParser {
 
     public int getPlayer_row() {
         return player_row;
+    }
+
+
+    public int getTimesVisitedUp() {
+        return steps.get(player_row - 1).get(player_column);
+    }
+
+    public int getTimesVisitedDown() {
+        return steps.get(player_row + 1).get(player_column);
+    }
+
+    public int getTimesVisitedLeft() {
+        return steps.get(player_row).get(player_column - 1);
+    }
+
+    public int getTimesVisitedRight() {
+        return steps.get(player_row).get(player_column + 1);
     }
 
     public void updateWorld(Perception world) {
@@ -276,22 +271,6 @@ public class WorldParser {
 
             }
         }
-    }
-
-    public int getTimesVisitedUp() {
-        return steps.get(player_row - 1).get(player_column);
-    }
-
-    public int getTimesVisitedDown() {
-        return steps.get(player_row + 1).get(player_column);
-    }
-
-    public int getTimesVisitedLeft() {
-        return steps.get(player_row).get(player_column - 1);
-    }
-
-    public int getTimesVisitedRight() {
-        return steps.get(player_row).get(player_column + 1);
     }
 
 }
