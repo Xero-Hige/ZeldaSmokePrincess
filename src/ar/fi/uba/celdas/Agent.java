@@ -1,7 +1,7 @@
 package ar.fi.uba.celdas;
 
 import ar.higesoft.Runner;
-import ar.higesoft.WorldParser;
+import ar.higesoft.WorldStatus;
 import core.game.StateObservation;
 import core.player.AbstractPlayer;
 import ontology.Types;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class Agent extends AbstractPlayer {
 
-    private WorldParser world;
+    private WorldStatus world;
 
     private static Runner r = new Runner();
 
@@ -32,7 +32,7 @@ public class Agent extends AbstractPlayer {
      */
     public Agent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
 
-        world = new WorldParser(new Perception(stateObs));
+        world = new WorldStatus(new Perception(stateObs));
         try {
             ruleBase = r.initialiseDrools();
         } catch (IOException e) {
