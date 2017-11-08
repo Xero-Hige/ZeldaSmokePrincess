@@ -87,40 +87,13 @@ public class WorldStatus {
         }
     }
 
-    public char getFacingElement() {
-        switch (direction) {
-            case UP:
-                return getAtPlayerUp();
-            case DOWN:
-                return getAtPlayerDown();
-            case LEFT:
-                return getAtPlayerLeft();
-            case RIGHT:
-                return getAtPlayerRight();
-            default:
-                return '-';
-        }
-    }
 
-    public int getAction() {
-        return action;
-    }
-
-    public void setAction(int action) {
-        this.action = action;
-        switch (action) {
-            case 1:
-                direction = LEFT;
-                break;
-            case 2:
-                direction = RIGHT;
-                break;
-            case 3:
-                direction = DOWN;
-                break;
-            case 4:
-                direction = UP;
+    private char getAt(int row, int column) {
+        if (column >= 0 && column < perception.getLevelWidth() || row >= 0 && row < perception.getLevelHeight()) {
+            return 'w';
         }
+
+        return perception.getAt(row, column);
     }
 
     public int getDirection() {
@@ -136,72 +109,9 @@ public class WorldStatus {
 
     }
 
-
-    public char getAtPlayerLeft() {
-        if (perception == null)
-            return '.';
-        return perception.getAt(player_row, player_column - 1);
-    }
-
-    public char getAtPlayerRight() {
-        if (perception == null)
-            return '.';
-        return perception.getAt(player_row, player_column + 1);
-    }
-
-    public char getAtPlayerUp() {
-        if (perception == null)
-            return '.';
-        return perception.getAt(player_row - 1, player_column);
-    }
-
-    public char getAtPlayerDown() {
-        if (perception == null)
-            return '.';
-        return perception.getAt(player_row + 1, player_column);
-    }
-
-
-    public boolean getEnemyUp() {
-        return getAtPlayerUp() == '2';
-    }
-
-    public boolean getCanGoUp() {
-        return (!getEnemyUp()) && (getAtPlayerUp() != 'w');
-    }
-
-
-    public boolean getEnemyDown() {
-        return getAtPlayerDown() == '2';
-    }
-
-    public boolean getCanGoDown() {
-        return (!getEnemyDown()) && (getAtPlayerDown() != 'w');
-    }
-
-
-    public boolean getEnemyLeft() {
-        return getAtPlayerLeft() == '2';
-    }
-
-    public boolean getCanGoLeft() {
-        return (!getEnemyLeft()) && (getAtPlayerLeft() != 'w');
-    }
-
-
-    public boolean getEnemyRight() {
-        return getAtPlayerRight() == '2';
-    }
-
-    public boolean getCanGoRight() {
-        return (!getEnemyRight()) && (getAtPlayerRight() != 'w');
-    }
-
-
     public boolean getHasKey() {
         return has_key;
     }
-
 
     public int getKey_row() {
 
@@ -220,21 +130,31 @@ public class WorldStatus {
         return player_row;
     }
 
+    public char[] getWorldStatus() {
+        char status[] = new char[12];
 
-    public int getTimesVisitedUp() {
-        return steps.get(player_row - 1).get(player_column);
-    }
+        int row = getPlayer_row();
+        int col = getPlayer_column();
 
-    public int getTimesVisitedDown() {
-        return steps.get(player_row + 1).get(player_column);
-    }
+        status[0] = getAt(row - 2, col);
 
-    public int getTimesVisitedLeft() {
-        return steps.get(player_row).get(player_column - 1);
-    }
+        status[1] = getAt(row - 1, col - 1);
+        status[2] = getAt(row - 1, col);
+        status[3] = getAt(row - 1, col + 1);
 
-    public int getTimesVisitedRight() {
-        return steps.get(player_row).get(player_column + 1);
+        status[4] = getAt(row, col - 2);
+        status[5] = getAt(row, col - 1);
+
+        status[6] = getAt(row, col + 1);
+        status[7] = getAt(row, col + 2);
+
+        status[8] = getAt(row + 1, col - 1);
+        status[9] = getAt(row + 1, col);
+        status[10] = getAt(row + 1, col + 1);
+
+        status[11] = getAt(row + 2, col);
+
+        return status;
     }
 
     public void updateWorld(Perception world) {
