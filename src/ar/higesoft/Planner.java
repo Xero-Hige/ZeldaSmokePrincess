@@ -1,6 +1,6 @@
 package ar.higesoft;
 
-import java.util.Random;
+import java.util.HashMap;
 
 /**
  * Copyright 2017
@@ -24,12 +24,23 @@ public class Planner {
     public static final int LEFT = 1;
     public static final int RIGHT = 2;
 
+    private HashMap<String, Integer> theories;
     public Planner() {
+        theories = new HashMap<>();
     }
 
     public int getNextAction(char[] status) {
-        int actions[] = {UP, DOWN, LEFT, RIGHT};
-        int rnd = new Random().nextInt(actions.length);
-        return actions[rnd];
+
+        String s_status = new String(status);
+
+        if (!theories.containsKey(s_status)) {
+            theories.put(s_status, UP);
+        } else {
+            theories.put(s_status, DOWN);
+        }
+
+        System.out.println(s_status);
+
+        return theories.get(s_status);
     }
 }
