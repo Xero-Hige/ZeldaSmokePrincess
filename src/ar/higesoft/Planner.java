@@ -25,6 +25,9 @@ public class Planner {
     public static final int LEFT = 1;
     public static final int RIGHT = 2;
 
+    public static final int A = 0;
+
+
     private String previous_status;
     private String predicted_status;
     private Theory applied_theory;
@@ -81,6 +84,9 @@ public class Planner {
             theories.push(new Theory(s_status, DOWN, s_status, -1));
             theories.push(new Theory(s_status, LEFT, s_status, -1));
             theories.push(new Theory(s_status, RIGHT, s_status, -1));
+
+            theories.push(new Theory(s_status, A, s_status, -1));
+
 
             relevant_theories = theories;
         }
