@@ -1,14 +1,11 @@
 package ar.fi.uba.celdas;
 
 import ar.higesoft.Planner;
-import ar.higesoft.Runner;
 import ar.higesoft.WorldStatus;
 import core.game.StateObservation;
 import core.player.AbstractPlayer;
 import ontology.Types;
 import ontology.Types.ACTIONS;
-import org.drools.RuleBase;
-import org.drools.WorkingMemory;
 import tools.ElapsedCpuTimer;
 
 import java.util.ArrayList;
@@ -17,11 +14,7 @@ public class Agent extends AbstractPlayer {
 
     private WorldStatus world;
 
-    private static Runner r = new Runner();
-
     private int action;
-    private RuleBase ruleBase;
-    private WorkingMemory workingMemory;
     private Planner planner;
 
     /**

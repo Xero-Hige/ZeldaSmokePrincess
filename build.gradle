@@ -46,6 +46,4 @@ jar {
 
 dependencies {
     compile "org.kie:kie-api:6.4.0.Final"
-    compile "org.drools:drools-core:5.6.0.Final"
-    compile "org.drools:drools-compiler:5.6.0.Final"
 }
