@@ -1,28 +1,28 @@
 package ar.fi.uba.celdas;
 
+import ar.higesoft.Planner;
 import ar.higesoft.Runner;
-import ar.higesoft.WorldParser;
+import ar.higesoft.WorldStatus;
 import core.game.StateObservation;
 import core.player.AbstractPlayer;
 import ontology.Types;
 import ontology.Types.ACTIONS;
 import org.drools.RuleBase;
 import org.drools.WorkingMemory;
-import org.drools.compiler.DroolsParserException;
 import tools.ElapsedCpuTimer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class Agent extends AbstractPlayer {
 
-    private WorldParser world;
+    private WorldStatus world;
 
     private static Runner r = new Runner();
 
     private int action;
     private RuleBase ruleBase;
     private WorkingMemory workingMemory;
+    private Planner planner;
 
     /**
      * initialize all variables for the agent
@@ -32,16 +32,8 @@ public class Agent extends AbstractPlayer {
      */
     public Agent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
 
-        world = new WorldParser(new Perception(stateObs));
-        try {
-            ruleBase = r.initialiseDrools();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (DroolsParserException e) {
-            e.printStackTrace();
-        }
-        r.setWorld(world);
-        workingMemory = r.initializeMessageObjects(ruleBase);
+        world = new WorldStatus(new Perception(stateObs));
+        planner = new Planner();
     }
 
     /**
@@ -56,17 +48,9 @@ public class Agent extends AbstractPlayer {
 
         Perception perception = new Perception(stateObs);
         world.updateWorld(perception);
-
-        workingMemory = r.initializeMessageObjects(ruleBase);
-
-        int actualNumberOfRulesFired = workingMemory.fireAllRules();
-
+        char[] status = world.getWorldStatus();
         ArrayList<Types.ACTIONS> actions = stateObs.getAvailableActions();
 
-        if (actualNumberOfRulesFired < 0) {
-            return actions.get(0);
-        }
-
-        return actions.get(world.getAction());
+        return actions.get(planner.getNextAction(status));
     }
 }
