@@ -21,10 +21,6 @@ import java.util.ArrayList;
  */
 public class WorldStatus {
 
-    public static final int UP = 4;
-    public static final int DOWN = 3;
-    public static final int LEFT = 1;
-    public static final int RIGHT = 2;
 
     private int player_row;
     private int player_column;
@@ -43,7 +39,6 @@ public class WorldStatus {
     public WorldStatus(Perception world) {
 
         steps = new ArrayList<>(0);
-        direction = LEFT;
 
         has_key = false;
 
