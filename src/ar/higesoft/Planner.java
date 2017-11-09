@@ -1,6 +1,7 @@
 package ar.higesoft;
 
-import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Random;
 
 /**
  * Copyright 2017
@@ -24,23 +25,109 @@ public class Planner {
     public static final int LEFT = 1;
     public static final int RIGHT = 2;
 
-    private HashMap<String, Integer> theories;
+    private String previous_status;
+    private String predicted_status;
+    private Theory applied_theory;
+    private LinkedList<Theory> theories;
+
     public Planner() {
-        theories = new HashMap<>();
+        theories = new LinkedList<>();
+        predicted_status = "------------";
+        previous_status = "------------";
+        applied_theory = null;
     }
 
     public int getNextAction(char[] status) {
 
         String s_status = new String(status);
 
-        if (!theories.containsKey(s_status)) {
-            theories.put(s_status, UP);
-        } else {
-            theories.put(s_status, DOWN);
+        if (applied_theory != null) {
+
+            boolean wrong = false;
+
+            for (int i = 0; i < predicted_status.length(); i++) {
+                if (predicted_status.charAt(i) == '-') {
+                    continue;
+                }
+
+                if (predicted_status.charAt(i) != s_status.charAt(i)) {
+                    wrong = true;
+                    break;
+                }
+            }
+
+            if (wrong) {
+                Theory new_t = new Theory(applied_theory.causes, applied_theory.action, s_status, 1);
+                theories.push(new_t);
+            } else {
+                if (applied_theory.causes == applied_theory.consecuence) {
+                    applied_theory.delta -= 1; //TODO: FIXME
+                }
+                applied_theory.delta += 1; //TODO: FIXME
+            }
+        }
+
+
+        LinkedList<Theory> relevant_theories = new LinkedList<>();
+
+        for (Theory t : theories) {
+            if (t.apply_to(s_status)) {
+                relevant_theories.push(t);
+            }
+        }
+
+        if (relevant_theories.size() == 0) {
+            theories.push(new Theory(s_status, UP, s_status, -1));
+            theories.push(new Theory(s_status, DOWN, s_status, -1));
+            theories.push(new Theory(s_status, LEFT, s_status, -1));
+            theories.push(new Theory(s_status, RIGHT, s_status, -1));
+
+            relevant_theories = theories;
+        }
+
+        int max_delta = relevant_theories.get(0).delta;
+        Theory best_theory = relevant_theories.get(0);
+
+        for (Theory t : relevant_theories) {
+            if (t.delta > max_delta) {
+                best_theory = t;
+                max_delta = t.delta;
+            }
+            if (t.delta == max_delta && new Random().nextBoolean()) {
+                best_theory = t;
+                max_delta = t.delta;
+            }
         }
 
         System.out.println(s_status);
 
-        return theories.get(s_status);
+        return best_theory.action;
+    }
+
+    private class Theory {
+        public String causes;
+        public int action;
+        public String consecuence;
+        public int delta;
+
+        Theory(String causes, int action, String consecuence, int delta) {
+            this.causes = causes;
+            this.action = action;
+            this.consecuence = consecuence;
+            this.delta = delta;
+        }
+
+        boolean apply_to(String status) {
+            for (int i = 0; i < status.length(); i++) {
+                if (causes.charAt(i) == '€') {
+                    continue;
+                }
+
+                if (causes.charAt(i) != status.charAt(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }
