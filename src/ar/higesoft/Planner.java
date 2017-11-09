@@ -60,8 +60,8 @@ public class Planner {
                 Theory new_t = new Theory(applied_theory.causes, applied_theory.action, s_status, 1);
                 theories.push(new_t);
             } else {
-                if (applied_theory.causes == applied_theory.consecuence) {
-                    applied_theory.delta -= 1; //TODO: FIXME
+                if (applied_theory.causes.equals(applied_theory.consecuence)) {
+                    applied_theory.delta = -10; //TODO: FIXME
                 }
                 applied_theory.delta += 1; //TODO: FIXME
             }
