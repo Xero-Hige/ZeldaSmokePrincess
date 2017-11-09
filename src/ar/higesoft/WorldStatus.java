@@ -84,11 +84,12 @@ public class WorldStatus {
 
 
     private char getAt(int row, int column) {
-        if (column >= 0 && column < perception.getLevelWidth() || row >= 0 && row < perception.getLevelHeight()) {
-            return 'w';
+        if ((column >= 0 && column < perception.getLevelWidth()) && (row >= 0 && row < perception.getLevelHeight())) {
+            return perception.getAt(row, column);
         }
 
-        return perception.getAt(row, column);
+        return 'w';
+
     }
 
     public int getDirection() {
