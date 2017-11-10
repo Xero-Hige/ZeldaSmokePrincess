@@ -40,6 +40,22 @@ public class Planner {
         applied_theory = null;
     }
 
+
+    public void generalize(){
+      theories = Collections.sort(theories,new Comparator<Theory>() {
+         @Override
+         public int compare(Theory t1, Theory t2) {
+             return String.compare(t1.causes,t2.causes)
+         }
+         )
+
+      for (int i=0;i<theories.size()-1;i++){
+        if (t1.causes == t2.causes){
+          theories.push(new Theory())
+        }
+      }
+    }
+
     public int getNextAction(char[] status) {
 
         String s_status = new String(status);
