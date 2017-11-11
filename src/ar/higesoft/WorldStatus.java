@@ -1,8 +1,8 @@
 package ar.higesoft;
 
 import ar.fi.uba.celdas.Perception;
-
-import java.util.ArrayList;
+import core.game.StateObservation;
+import tools.Vector2d;
 
 /**
  * Copyright 2017
@@ -29,22 +29,21 @@ public class WorldStatus {
     private int door_row;
     private int door_column;
     private boolean has_key;
-    private ArrayList<ArrayList<Integer>> steps;
     private int direction;
+    private int points;
 
-    private Perception perception = null;
+    private Perception perception;
+
+    private char facing_a = '0';
+    private char facing_b = '0';
 
     private int action = 0;
+    private boolean alive = true;
 
-    public WorldStatus(Perception world) {
-
-        steps = new ArrayList<>(0);
+    public WorldStatus(StateObservation stateObs) {
 
         has_key = false;
-
-        for (int i = 0; i < world.getLevelHeight(); i++) {
-            steps.add(new ArrayList<>(0));
-        }
+        Perception world = new Perception(stateObs);
 
         for (int i = 0; i < world.getLevelHeight(); i++) {
             for (int j = 0; j < world.getLevelWidth(); j++) {
@@ -63,19 +62,6 @@ public class WorldStatus {
                     case 'g':
                         door_column = j;
                         door_row = i;
-                        break;
-                }
-
-                switch (item) {
-                    case 'A':
-                        steps.get(i).add(1);
-                        break;
-                    case 'g':
-                    case 'w':
-                        steps.get(i).add(Integer.MAX_VALUE);
-                        break;
-                    default:
-                        steps.get(i).add(0);
                         break;
                 }
             }
@@ -127,7 +113,7 @@ public class WorldStatus {
     }
 
     public String getWorldStatus() {
-        char status[] = new char[12];
+        char status[] = new char[14];
 
         int row = getPlayer_row();
         int col = getPlayer_column();
@@ -150,12 +136,32 @@ public class WorldStatus {
 
         status[11] = getAt(row + 2, col);
 
+        status[12] = facing_a;
+        status[13] = facing_b;
+
         return new String(status);
     }
 
-    public void updateWorld(Perception world) {
+    public void updateWorld(StateObservation stateObs) {
 
+        Perception world = new Perception(stateObs);
         perception = world;
+
+        Vector2d orientation = stateObs.getAvatarOrientation();
+        double x = orientation.x;
+        double y = orientation.y;
+
+        alive = !(x == -1 && y == -1);
+
+        facing_a = '0';
+        if (x != 0) {
+            facing_a = (x > 0) ? 'f' : 'b';
+        }
+
+        facing_b = '0';
+        if (y != 0) {
+            facing_b = (y > 0) ? 'f' : 'b';
+        }
 
         for (int i = 0; i < world.getLevelHeight(); i++) {
             for (int j = 0; j < world.getLevelWidth(); j++) {
@@ -170,18 +176,7 @@ public class WorldStatus {
 
                         if (player_column == key_column && player_row == key_row && !has_key) {
                             has_key = true;
-                            steps.get(door_row).set(door_column, 0);
-
-                            for (int x = 0; x < world.getLevelHeight(); x++) {
-                                for (int y = 0; y < world.getLevelWidth(); y++) {
-                                    if (steps.get(x).get(y) < Integer.MAX_VALUE) {
-                                        steps.get(x).set(y, 0);
-                                    }
-                                }
-                            }
                         }
-
-                        steps.get(i).set(j, steps.get(i).get(j) + 1);
                         return;
                 }
 
