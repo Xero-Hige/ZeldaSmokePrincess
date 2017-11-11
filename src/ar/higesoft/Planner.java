@@ -29,7 +29,6 @@ public class Planner {
 
     public static final int A = 0;
 
-
     private String previous_status;
     private String predicted_status;
     private Theory applied_theory;
@@ -42,6 +41,38 @@ public class Planner {
         applied_theory = null;
     }
 
+
+    public String getPrevious_status() {
+        return previous_status;
+    }
+
+    public void setPrevious_status(String previous_status) {
+        this.previous_status = previous_status;
+    }
+
+    public String getPredicted_status() {
+        return predicted_status;
+    }
+
+    public void setPredicted_status(String predicted_status) {
+        this.predicted_status = predicted_status;
+    }
+
+    public Theory getApplied_theory() {
+        return applied_theory;
+    }
+
+    public void setApplied_theory(Theory applied_theory) {
+        this.applied_theory = applied_theory;
+    }
+
+    public LinkedList<Theory> getTheories() {
+        return theories;
+    }
+
+    public void setTheories(LinkedList<Theory> theories) {
+        this.theories = theories;
+    }
 
     public void generalize() {
         Collections.sort(theories, Comparator.comparing(t -> t.causes));
@@ -116,7 +147,7 @@ public class Planner {
                 Theory new_t = new Theory(applied_theory.causes, applied_theory.action, status, 1);
                 theories.push(new_t);
             } else {
-                if (applied_theory.causes.equals(applied_theory.consecuence)) {
+                if (applied_theory.causes.equals(applied_theory.getConsequences())) {
                     applied_theory.delta = -10; //TODO: FIXME
                 }
                 applied_theory.delta += 1; //TODO: FIXME
@@ -126,16 +157,48 @@ public class Planner {
     }
 
     private class Theory {
-        public String causes;
-        public int action;
-        public String consecuence;
-        public int delta;
+        String causes;
+        int action;
+        String consequences;
+        int delta;
 
-        Theory(String causes, int action, String consecuence, int delta) {
+        Theory(String causes, int action, String consequences, int delta) {
             this.causes = causes;
             this.action = action;
-            this.consecuence = consecuence;
+            this.consequences = consequences;
             this.delta = delta;
+        }
+
+        public String getCauses() {
+            return causes;
+        }
+
+        public void setCauses(String causes) {
+            this.causes = causes;
+        }
+
+        public String getConsequences() {
+            return consequences;
+        }
+
+        public void setConsequences(String consequences) {
+            this.consequences = consequences;
+        }
+
+        public int getDelta() {
+            return delta;
+        }
+
+        public void setDelta(int delta) {
+            this.delta = delta;
+        }
+
+        public int getAction() {
+            return action;
+        }
+
+        public void setAction(int action) {
+            this.action = action;
         }
 
         boolean apply_to(String status) {
@@ -149,6 +212,25 @@ public class Planner {
                 }
             }
             return true;
+        }
+
+        Theory generalize(Theory other) {
+            if (this.action != other.action) {
+                return null;
+            }
+
+            if (!this.consequences.equals(other.consequences)) {
+                return null;
+            }
+
+            char[] new_c = new char[12];
+
+            for (int i = 0; i < causes.length(); i++) {
+                new_c[i] = (causes.charAt(i) == other.causes.charAt(i)) ? causes.charAt(i) : '-';
+            }
+
+            String new_causes = new String(new_c);
+            return new Theory(new_causes, action, consequences, delta + other.delta);
         }
     }
 }
