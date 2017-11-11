@@ -37,20 +37,20 @@ public class Agent extends AbstractPlayer {
      */
     @Override
     public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
-        return getNextAction(stateObs);
+        Perception perception = new Perception(stateObs);
+        world.updateWorld(perception);
+        String status = world.getWorldStatus();
+        planner.updateTheories(status);
+
+        ArrayList<ACTIONS> actions = stateObs.getAvailableActions();
+        return actions.get(planner.getNextAction(status));
     }
 
     @Override
     public void result(StateObservation stateObs, ElapsedCpuTimer elapsedCpuTimer) {
-        getNextAction(stateObs);
-    }
-
-    private ACTIONS getNextAction(StateObservation stateObs) {
         Perception perception = new Perception(stateObs);
         world.updateWorld(perception);
         String status = world.getWorldStatus();
-        ArrayList<ACTIONS> actions = stateObs.getAvailableActions();
-
-        return actions.get(planner.getNextAction(status));
+        planner.updateTheories(status);
     }
 }

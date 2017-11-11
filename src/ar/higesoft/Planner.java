@@ -96,7 +96,7 @@ public class Planner {
         return best_theory.action;
     }
 
-    private String updateTheories(String status) {
+    public String updateTheories(String status) {
         if (applied_theory != null) {
 
             boolean wrong = false;
