@@ -30,19 +30,8 @@ public class Agent extends AbstractPlayer {
      */
     public Agent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
 
-        world = new WorldStatus(new Perception(stateObs));
-
-        // create the mapper
-        ObjectMapper mapper = new ObjectMapper();
-
-        try {
-            File file = new File("planner.json");
-            String everything = FileUtils.readFileToString(file);
-            planner = mapper.readValue(everything, Planner.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-            planner = new Planner();
-        }
+        world = new WorldStatus(stateObs);
+        load_planner();
 
     }
 
@@ -55,10 +44,9 @@ public class Agent extends AbstractPlayer {
      */
     @Override
     public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
-        Perception perception = new Perception(stateObs);
-        world.updateWorld(perception);
+        world.updateWorld(stateObs);
         String status = world.getWorldStatus();
-        planner.updateTheories(status);
+        planner.updateTheories(status, stateObs);
 
         ArrayList<ACTIONS> actions = stateObs.getAvailableActions();
         return actions.get(planner.getNextAction(status));
@@ -66,10 +54,9 @@ public class Agent extends AbstractPlayer {
 
     @Override
     public void result(StateObservation stateObs, ElapsedCpuTimer elapsedCpuTimer) {
-        Perception perception = new Perception(stateObs);
-        world.updateWorld(perception);
+        world.updateWorld(stateObs);
         String status = world.getWorldStatus();
-        planner.updateTheories(status);
+        planner.updateTheories(status, stateObs);
 
         persistPlanner();
     }
@@ -81,6 +68,19 @@ public class Agent extends AbstractPlayer {
             mapper.writeValue(out, planner);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+
+    private void load_planner() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            File file = new File("planner.json");
+            String everything = FileUtils.readFileToString(file);
+            planner = mapper.readValue(everything, Planner.class);
+            planner.cleanPlanner();
+        } catch (IOException e) {
+            planner = new Planner();
         }
     }
 }
