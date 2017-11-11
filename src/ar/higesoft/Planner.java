@@ -1,5 +1,7 @@
 package ar.higesoft;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -41,67 +43,35 @@ public class Planner {
     }
 
 
-    public void generalize(){
-      theories = Collections.sort(theories,new Comparator<Theory>() {
-         @Override
-         public int compare(Theory t1, Theory t2) {
-             return String.compare(t1.causes,t2.causes)
-         }
-         )
+    public void generalize() {
+        Collections.sort(theories, Comparator.comparing(t -> t.causes));
 
-      for (int i=0;i<theories.size()-1;i++){
-        if (t1.causes == t2.causes){
-          theories.push(new Theory())
+        for (int i = 0; i < theories.size() - 1; i++) {
+            if (theories.get(i).causes.equals(theories.get(i + 1).causes)) {
+            }
         }
-      }
     }
 
-    public int getNextAction(char[] status) {
+    public int getNextAction(String status) {
 
-        String s_status = new String(status);
-
-        if (applied_theory != null) {
-
-            boolean wrong = false;
-
-            for (int i = 0; i < predicted_status.length(); i++) {
-                if (predicted_status.charAt(i) == '-') {
-                    continue;
-                }
-
-                if (predicted_status.charAt(i) != s_status.charAt(i)) {
-                    wrong = true;
-                    break;
-                }
-            }
-
-            if (wrong) {
-                Theory new_t = new Theory(applied_theory.causes, applied_theory.action, s_status, 1);
-                theories.push(new_t);
-            } else {
-                if (applied_theory.causes.equals(applied_theory.consecuence)) {
-                    applied_theory.delta = -10; //TODO: FIXME
-                }
-                applied_theory.delta += 1; //TODO: FIXME
-            }
-        }
+        updateTheories(status);
 
 
         LinkedList<Theory> relevant_theories = new LinkedList<>();
 
         for (Theory t : theories) {
-            if (t.apply_to(s_status)) {
+            if (t.apply_to(status)) {
                 relevant_theories.push(t);
             }
         }
 
         if (relevant_theories.size() == 0) {
-            theories.push(new Theory(s_status, UP, s_status, -1));
-            theories.push(new Theory(s_status, DOWN, s_status, -1));
-            theories.push(new Theory(s_status, LEFT, s_status, -1));
-            theories.push(new Theory(s_status, RIGHT, s_status, -1));
+            theories.push(new Theory(status, UP, status, -1));
+            theories.push(new Theory(status, DOWN, status, -1));
+            theories.push(new Theory(status, LEFT, status, -1));
+            theories.push(new Theory(status, RIGHT, status, -1));
 
-            theories.push(new Theory(s_status, A, s_status, -1));
+            theories.push(new Theory(status, A, status, -1));
 
 
             relevant_theories = theories;
@@ -121,9 +91,38 @@ public class Planner {
             }
         }
 
-        System.out.println(s_status);
+        System.out.println(status);
 
         return best_theory.action;
+    }
+
+    private String updateTheories(String status) {
+        if (applied_theory != null) {
+
+            boolean wrong = false;
+
+            for (int i = 0; i < predicted_status.length(); i++) {
+                if (predicted_status.charAt(i) == '-') {
+                    continue;
+                }
+
+                if (predicted_status.charAt(i) != status.charAt(i)) {
+                    wrong = true;
+                    break;
+                }
+            }
+
+            if (wrong) {
+                Theory new_t = new Theory(applied_theory.causes, applied_theory.action, status, 1);
+                theories.push(new_t);
+            } else {
+                if (applied_theory.causes.equals(applied_theory.consecuence)) {
+                    applied_theory.delta = -10; //TODO: FIXME
+                }
+                applied_theory.delta += 1; //TODO: FIXME
+            }
+        }
+        return status;
     }
 
     private class Theory {
