@@ -1,5 +1,7 @@
 package ar.higesoft;
 
+import core.game.StateObservation;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -36,11 +38,16 @@ public class Planner {
 
     public Planner() {
         theories = new LinkedList<>();
-        predicted_status = "------------";
-        previous_status = "------------";
+        predicted_status = "-";
+        previous_status = "-";
         applied_theory = null;
     }
 
+    public void cleanPlanner() {
+        predicted_status = "-";
+        previous_status = "-";
+        applied_theory = null;
+    }
 
     public String getPrevious_status() {
         return previous_status;
@@ -84,10 +91,6 @@ public class Planner {
     }
 
     public int getNextAction(String status) {
-
-        updateTheories(status);
-
-
         LinkedList<Theory> relevant_theories = new LinkedList<>();
 
         for (Theory t : theories) {
@@ -124,36 +127,40 @@ public class Planner {
 
         System.out.println(status);
 
+        applied_theory = best_theory;
+        previous_status = status;
+        predicted_status = best_theory.consequences;
         return best_theory.action;
     }
 
-    public String updateTheories(String status) {
-        if (applied_theory != null) {
+    public void updateTheories(String status, StateObservation stateObs) {
+        if (applied_theory == null) {
+            return;
+        }
 
-            boolean wrong = false;
+        boolean wrong = false;
 
-            for (int i = 0; i < predicted_status.length(); i++) {
-                if (predicted_status.charAt(i) == '-') {
-                    continue;
-                }
-
-                if (predicted_status.charAt(i) != status.charAt(i)) {
-                    wrong = true;
-                    break;
-                }
+        for (int i = 0; i < predicted_status.length(); i++) {
+            if (predicted_status.charAt(i) == '-') {
+                continue;
             }
 
-            if (wrong) {
-                Theory new_t = new Theory(applied_theory.causes, applied_theory.action, status, 1);
-                theories.push(new_t);
-            } else {
-                if (applied_theory.causes.equals(applied_theory.getConsequences())) {
-                    applied_theory.delta = -10; //TODO: FIXME
-                }
-                applied_theory.delta += 1; //TODO: FIXME
+            if (predicted_status.charAt(i) != status.charAt(i)) {
+                wrong = true;
+                break;
             }
         }
-        return status;
+
+        if (wrong) {
+            Theory new_t = new Theory(applied_theory.causes, applied_theory.action, status, 1);
+            theories.push(new_t);
+        } else {
+            if (applied_theory.causes.equals(applied_theory.getConsequences())) {
+                applied_theory.delta = -10; //TODO: FIXME
+            }
+            applied_theory.delta += 1; //TODO: FIXME
+        }
+
     }
 
     private class Theory {
