@@ -2,11 +2,17 @@ package ar.fi.uba.celdas;
 
 import ar.higesoft.Planner;
 import ar.higesoft.WorldStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import core.game.StateObservation;
 import core.player.AbstractPlayer;
 import ontology.Types.ACTIONS;
+import org.apache.commons.io.FileUtils;
 import tools.ElapsedCpuTimer;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 public class Agent extends AbstractPlayer {
@@ -25,7 +31,19 @@ public class Agent extends AbstractPlayer {
     public Agent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
 
         world = new WorldStatus(new Perception(stateObs));
-        planner = new Planner();
+
+        // create the mapper
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            File file = new File("planner.json");
+            String everything = FileUtils.readFileToString(file);
+            planner = mapper.readValue(everything, Planner.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            planner = new Planner();
+        }
+
     }
 
     /**
@@ -52,5 +70,17 @@ public class Agent extends AbstractPlayer {
         world.updateWorld(perception);
         String status = world.getWorldStatus();
         planner.updateTheories(status);
+
+        persistPlanner();
+    }
+
+    private void persistPlanner() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        try (PrintWriter out = new PrintWriter("planner.json")) {
+            mapper.writeValue(out, planner);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

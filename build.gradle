@@ -31,10 +31,6 @@ repositories {
         name 'central'
         url 'http://repo1.maven.org/maven2'
     }
-    maven {
-        name 'jboss'
-        url 'http://repository.jboss.org/nexus/content/groups/public-jboss'
-    }
 }
 
 jar {
@@ -46,4 +42,6 @@ jar {
 
 dependencies {
     compile "org.kie:kie-api:6.4.0.Final"
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.0.1'
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
 }
