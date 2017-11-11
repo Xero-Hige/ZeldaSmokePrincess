@@ -126,6 +126,7 @@ public class Planner {
         applied_theory = best_theory;
         previous_status = status;
         predicted_status = best_theory.consequences;
+        best_theory.applied_times += 1;
         return best_theory.action;
     }
 
@@ -150,17 +151,23 @@ public class Planner {
         if (wrong) {
             Theory new_t = new Theory(applied_theory.causes, applied_theory.action, status, 1);
             theories.push(new_t);
-        } else {
-            if (applied_theory.causes.equals(applied_theory.getConsequences())) {
-                applied_theory.delta = -10; //TODO: FIXME
+
+            if (!world.isPlayerAlive()) {
+                new_t.delta = -1000;
             }
+        } else {
+            applied_theory.success_times += 1;
+
+            if (applied_theory.causes.equals(applied_theory.getConsequences())) {
+                applied_theory.delta = -100; //TODO: FIXME
+            }
+
             applied_theory.delta += 1; //TODO: FIXME
-        }
 
-        if (!world.isPlayerAlive()) {
-            applied_theory.delta = -1000;
+            if (!world.isPlayerAlive()) {
+                applied_theory.delta = -1000;
+            }
         }
-
     }
 
     private static class Theory {
@@ -234,7 +241,7 @@ public class Planner {
             this.success_times = success_times;
         }
 
-        public double getSuccesRate() {
+        public double succesRateGet() {
             return (double) success_times / applied_times;
         }
 
