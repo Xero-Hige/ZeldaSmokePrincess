@@ -169,6 +169,9 @@ public class Planner {
         String consequences;
         int delta;
 
+        int applied_times = 0;
+        int success_times = 0;
+
         Theory(String causes, int action, String consequences, int delta) {
             this.causes = causes;
             this.action = action;
@@ -213,6 +216,26 @@ public class Planner {
 
         public void setAction(int action) {
             this.action = action;
+        }
+
+        public int getApplied_times() {
+            return applied_times;
+        }
+
+        public void setApplied_times(int applied_times) {
+            this.applied_times = applied_times;
+        }
+
+        public int getSuccess_times() {
+            return success_times;
+        }
+
+        public void setSuccess_times(int success_times) {
+            this.success_times = success_times;
+        }
+
+        public double getSuccesRate() {
+            return (double) success_times / applied_times;
         }
 
         boolean apply_to(String status) {
