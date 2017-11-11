@@ -4,7 +4,6 @@ import ar.higesoft.Planner;
 import ar.higesoft.WorldStatus;
 import core.game.StateObservation;
 import core.player.AbstractPlayer;
-import ontology.Types;
 import ontology.Types.ACTIONS;
 import tools.ElapsedCpuTimer;
 
@@ -38,11 +37,19 @@ public class Agent extends AbstractPlayer {
      */
     @Override
     public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
+        return getNextAction(stateObs);
+    }
 
+    @Override
+    public void result(StateObservation stateObs, ElapsedCpuTimer elapsedCpuTimer) {
+        getNextAction(stateObs);
+    }
+
+    private ACTIONS getNextAction(StateObservation stateObs) {
         Perception perception = new Perception(stateObs);
         world.updateWorld(perception);
-        char[] status = world.getWorldStatus();
-        ArrayList<Types.ACTIONS> actions = stateObs.getAvailableActions();
+        String status = world.getWorldStatus();
+        ArrayList<ACTIONS> actions = stateObs.getAvailableActions();
 
         return actions.get(planner.getNextAction(status));
     }

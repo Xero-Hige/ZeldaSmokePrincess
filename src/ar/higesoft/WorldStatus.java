@@ -126,7 +126,7 @@ public class WorldStatus {
         return player_row;
     }
 
-    public char[] getWorldStatus() {
+    public String getWorldStatus() {
         char status[] = new char[12];
 
         int row = getPlayer_row();
@@ -150,7 +150,7 @@ public class WorldStatus {
 
         status[11] = getAt(row + 2, col);
 
-        return status;
+        return new String(status);
     }
 
     public void updateWorld(Perception world) {
