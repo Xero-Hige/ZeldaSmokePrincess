@@ -38,7 +38,8 @@ public class WorldStatus {
     private char facing_b = '0';
 
     private int action = 0;
-    private boolean alive = true;
+
+    private boolean playerAlive = true;
 
     public WorldStatus(StateObservation stateObs) {
 
@@ -68,6 +69,9 @@ public class WorldStatus {
         }
     }
 
+    public boolean isPlayerAlive() {
+        return playerAlive;
+    }
 
     private char getAt(int row, int column) {
         if ((column >= 0 && column < perception.getLevelWidth()) && (row >= 0 && row < perception.getLevelHeight())) {
@@ -151,7 +155,11 @@ public class WorldStatus {
         double x = orientation.x;
         double y = orientation.y;
 
-        alive = !(x == -1 && y == -1);
+        playerAlive = !(x == -1 && y == -1);
+
+        if (!playerAlive) {
+            System.out.println("I'm Dead");
+        }
 
         facing_a = '0';
         if (x != 0) {

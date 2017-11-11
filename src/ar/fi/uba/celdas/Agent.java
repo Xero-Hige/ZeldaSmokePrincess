@@ -46,7 +46,7 @@ public class Agent extends AbstractPlayer {
     public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
         world.updateWorld(stateObs);
         String status = world.getWorldStatus();
-        planner.updateTheories(status, stateObs);
+        planner.updateTheories(status, world);
 
         ArrayList<ACTIONS> actions = stateObs.getAvailableActions();
         return actions.get(planner.getNextAction(status));
@@ -56,7 +56,7 @@ public class Agent extends AbstractPlayer {
     public void result(StateObservation stateObs, ElapsedCpuTimer elapsedCpuTimer) {
         world.updateWorld(stateObs);
         String status = world.getWorldStatus();
-        planner.updateTheories(status, stateObs);
+        planner.updateTheories(status, world);
 
         persistPlanner();
     }
@@ -78,8 +78,8 @@ public class Agent extends AbstractPlayer {
             File file = new File("planner.json");
             String everything = FileUtils.readFileToString(file);
             planner = mapper.readValue(everything, Planner.class);
-            planner.cleanPlanner();
         } catch (IOException e) {
+            e.printStackTrace();
             planner = new Planner();
         }
     }

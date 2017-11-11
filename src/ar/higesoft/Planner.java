@@ -1,7 +1,5 @@
 package ar.higesoft;
 
-import core.game.StateObservation;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -125,15 +123,13 @@ public class Planner {
             }
         }
 
-        System.out.println(status);
-
         applied_theory = best_theory;
         previous_status = status;
         predicted_status = best_theory.consequences;
         return best_theory.action;
     }
 
-    public void updateTheories(String status, StateObservation stateObs) {
+    public void updateTheories(String status, WorldStatus world) {
         if (applied_theory == null) {
             return;
         }
@@ -161,9 +157,13 @@ public class Planner {
             applied_theory.delta += 1; //TODO: FIXME
         }
 
+        if (!world.isPlayerAlive()) {
+            applied_theory.delta = -1000;
+        }
+
     }
 
-    private class Theory {
+    private static class Theory {
         String causes;
         int action;
         String consequences;
@@ -174,6 +174,13 @@ public class Planner {
             this.action = action;
             this.consequences = consequences;
             this.delta = delta;
+        }
+
+        public Theory() {
+            this.causes = "";
+            this.action = -20;
+            this.consequences = "";
+            this.delta = 0;
         }
 
         public String getCauses() {
