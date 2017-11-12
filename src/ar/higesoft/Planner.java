@@ -1,9 +1,12 @@
 package ar.higesoft;
 
-import java.util.Collections;
-import java.util.Comparator;
+import core.game.StateObservation;
+
 import java.util.LinkedList;
 import java.util.Random;
+
+import static ar.higesoft.WorldStatus.STATUS_SIZE;
+import static java.lang.Math.abs;
 
 /**
  * Copyright 2017
@@ -33,6 +36,7 @@ public class Planner {
     private String predicted_status;
     private Theory applied_theory;
     private LinkedList<Theory> theories;
+    private int previousGain;
 
     public Planner() {
         theories = new LinkedList<>();
@@ -80,12 +84,45 @@ public class Planner {
     }
 
     public void generalize() {
-        Collections.sort(theories, Comparator.comparing(t -> t.causes));
+        theories.sort((a1, a2) -> {
+            if (!a1.consequences.equals(a2.consequences)) {
+                return a1.consequences.compareTo(a2.consequences);
+            }
 
-        for (int i = 0; i < theories.size() - 1; i++) {
-            if (theories.get(i).causes.equals(theories.get(i + 1).causes)) {
+            if (a1.delta != a2.delta) {
+                return Integer.compare(a1.delta, a2.delta);
+            }
+
+            return Integer.compare(a1.action, a2.action);
+        });
+
+        LinkedList<Theory> new_theories = new LinkedList<>();
+
+        Theory a = theories.removeFirst();
+        while (theories.size() > 2) {
+            Theory b = theories.removeFirst();
+
+            if (b.succesRateGet() <= 0.2) {
+                new_theories.addLast(b);
+                continue;
+            }
+
+            Theory general = b.generalize(a);
+
+            if (general != null) {
+                new_theories.addLast(general);
+                a = theories.removeFirst();
+            } else {
+                new_theories.addLast(a);
+                a = b;
             }
         }
+
+        while (theories.size() > 0) {
+            new_theories.addLast(theories.removeFirst());
+        }
+
+        theories = new_theories;
     }
 
     public int getNextAction(String status) {
@@ -98,18 +135,17 @@ public class Planner {
         }
 
         if (relevant_theories.size() == 0) {
-            theories.push(new Theory(status, UP, status, -1));
-            theories.push(new Theory(status, DOWN, status, -1));
-            theories.push(new Theory(status, LEFT, status, -1));
-            theories.push(new Theory(status, RIGHT, status, -1));
+            theories.push(new Theory(status, UP, status, 10));
+            theories.push(new Theory(status, DOWN, status, 10));
+            theories.push(new Theory(status, LEFT, status, 10));
+            theories.push(new Theory(status, RIGHT, status, 10));
 
-            theories.push(new Theory(status, A, status, -1));
-
+            theories.push(new Theory(status, A, status, 10));
 
             relevant_theories = theories;
         }
 
-        int max_delta = relevant_theories.get(0).delta;
+        double max_delta = relevant_theories.get(0).delta;
         Theory best_theory = relevant_theories.get(0);
 
         for (Theory t : relevant_theories) {
@@ -117,10 +153,20 @@ public class Planner {
                 best_theory = t;
                 max_delta = t.delta;
             }
-            if (t.delta == max_delta && new Random().nextBoolean()) {
-                best_theory = t;
-                max_delta = t.delta;
+
+            if (t.delta < max_delta) {
+                continue;
             }
+
+            if (t.causes.lastIndexOf("€") != -1 && best_theory.causes.lastIndexOf("€") == -1) {
+                best_theory = t;
+            }
+        }
+
+        if (max_delta < -10) {
+            int array[] = {UP, DOWN, LEFT, RIGHT, A, A, A, A};
+            int rnd = new Random().nextInt(array.length);
+            best_theory = new Theory(status, array[rnd], status, 10);
         }
 
         applied_theory = best_theory;
@@ -130,7 +176,26 @@ public class Planner {
         return best_theory.action;
     }
 
-    public void updateTheories(String status, WorldStatus world) {
+    private int calcGain(WorldStatus world, StateObservation stateObs) {
+        int a;
+        int b;
+        if (world.getHasKey()) {
+            a = world.getDoor_column();
+            b = world.getDoor_row();
+        } else {
+            a = world.getKey_column();
+            b = world.getKey_row();
+        }
+
+        int col_diff = abs(a - world.getPlayer_column());
+        int row_diff = abs(b - world.getPlayer_row());
+
+        return (col_diff + row_diff) * -1 + 15 * ((world.getHasKey()) ? 1 : 0) + (int) (7 * stateObs.getGameScore());
+    }
+
+
+    public void updateTheories(String status, WorldStatus world, StateObservation stateObs) {
+        //System.out.println(String.format("Status: %s Action: %d", status, applied_theory.action));
         if (applied_theory == null) {
             return;
         }
@@ -148,26 +213,104 @@ public class Planner {
             }
         }
 
+
+        int new_gain = calcGain(world, stateObs);
+        int delta = computeDelta(status, world, new_gain);
+
+        String s = previous_status;
+        String s_p = status;
+        //Theory t = applied_theory;
+        //String c = applied_theory.causes;
+        String e = applied_theory.consequences;
+
         if (wrong) {
-            Theory new_t = new Theory(applied_theory.causes, applied_theory.action, status, 1);
+            retract(delta, s, s_p, e);
+        }
+
+        /*
+        if (wrong || delta != applied_theory.delta) {
+            applied_theory.applied_times += 1;
+
+            for (Theory t : theories) {
+                if (!t.causes.equals(applied_theory.causes)) {
+                    continue;
+                }
+
+                if (!t.consequences.equals(applied_theory.consequences)) {
+                    continue;
+                }
+
+                if (t.action != applied_theory.action) {
+                    continue;
+                }
+
+                if (t.delta != delta) {
+                    continue;
+                }
+
+                t.applied_times += 1;
+                t.success_times += 1;
+                previousGain = new_gain;
+                return;
+            }
+
+            Theory new_t = new Theory(applied_theory.causes, applied_theory.action, status, delta);
             theories.push(new_t);
 
-            if (!world.isPlayerAlive()) {
-                new_t.delta = -1000;
+            new_t.setApplied_times(2);
+            new_t.setSuccess_times(2);
+            previousGain = new_gain;
+            return;
+        }
+
+        applied_theory.success_times += 1;
+        previousGain = new_gain;
+        */
+    }
+
+    private void retract(int delta, String s, String s_p, String e) {
+        char e_t2[] = e.toCharArray();
+
+        for (int i = 0; i < predicted_status.length(); i++) {
+            if (e.charAt(i) == '-') {
+                e_t2[i] = '-';
+                continue;
             }
-        } else {
-            applied_theory.success_times += 1;
 
-            if (applied_theory.causes.equals(applied_theory.getConsequences())) {
-                applied_theory.delta = -100; //TODO: FIXME
-            }
-
-            applied_theory.delta += 1; //TODO: FIXME
-
-            if (!world.isPlayerAlive()) {
-                applied_theory.delta = -1000;
+            if (e.charAt(i) != s_p.charAt(i)) {
+                e_t2[i] = '-';
             }
         }
+
+        String e_t2_string = new String(e_t2);
+        Theory retracted = new Theory(s, applied_theory.action, e_t2_string, delta);
+        retracted.setApplied_times(1);
+        retracted.setSuccess_times(1);
+
+        theories.addLast(retracted);
+    }
+
+    private int computeDelta(String status, WorldStatus world, int new_gain) {
+        int delta = previousGain - new_gain;
+
+        if (new_gain == previousGain) { //Nothing best
+
+            if (previous_status.equals(status)) { //Not moved
+                delta = -300;
+                applied_theory.delta = -300;
+            }
+        }
+
+        if (!world.isPlayerAlive()) { //Dead
+            delta = -1000;
+        }
+        return delta;
+    }
+
+    public void removeUnsuccess() {
+        theories.removeIf(t -> t.applied_times == 0);
+        theories.removeIf(t -> t.delta < -1000);
+        theories.removeIf(t -> t.succesRateGet() <= 0.1);
     }
 
     private static class Theory {
@@ -188,7 +331,7 @@ public class Planner {
 
         public Theory() {
             this.causes = "";
-            this.action = -20;
+            this.action = -5;
             this.consequences = "";
             this.delta = 0;
         }
@@ -263,18 +406,30 @@ public class Planner {
                 return null;
             }
 
+            if (this.delta != other.delta) {
+                return null;
+            }
+
             if (!this.consequences.equals(other.consequences)) {
                 return null;
             }
 
-            char[] new_c = new char[12];
+            if (this.succesRateGet() < 0.20 || other.succesRateGet() < 0.20) {
+                return null;
+            }
+
+            char[] new_c = new char[STATUS_SIZE];
 
             for (int i = 0; i < causes.length(); i++) {
-                new_c[i] = (causes.charAt(i) == other.causes.charAt(i)) ? causes.charAt(i) : '-';
+                new_c[i] = (causes.charAt(i) == other.causes.charAt(i)) ? causes.charAt(i) : '€';
             }
 
             String new_causes = new String(new_c);
-            return new Theory(new_causes, action, consequences, delta + other.delta);
+            Theory new_theory = new Theory(new_causes, action, consequences, (delta + other.delta) / 2);
+            new_theory.setSuccess_times(10);
+            new_theory.setApplied_times(10);
+
+            return new_theory;
         }
     }
 }
