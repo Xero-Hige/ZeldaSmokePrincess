@@ -80,6 +80,7 @@ public class Agent extends AbstractPlayer {
             File file = new File("planner.json");
             String everything = FileUtils.readFileToString(file);
             planner = mapper.readValue(everything, Planner.class);
+            planner.cleanPlanner();
         } catch (IOException e) {
             e.printStackTrace();
             planner = new Planner();
