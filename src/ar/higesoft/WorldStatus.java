@@ -4,6 +4,8 @@ import ar.fi.uba.celdas.Perception;
 import core.game.StateObservation;
 import tools.Vector2d;
 
+import static java.lang.Math.sqrt;
+
 /**
  * Copyright 2017
  * Gaston Martinez gaston.martinez.90@gmail.com
@@ -221,6 +223,21 @@ public class WorldStatus {
 
             }
         }
+    }
+
+    public double getDistanceToGoal() {
+        int coldif;
+        int rowdif;
+
+        if (has_key) {
+            coldif = player_column - door_column;
+            rowdif = player_row - door_row;
+        } else {
+            coldif = player_column - key_column;
+            rowdif = player_row - key_row;
+        }
+
+        return sqrt(coldif * coldif + rowdif * rowdif);
     }
 
 }
