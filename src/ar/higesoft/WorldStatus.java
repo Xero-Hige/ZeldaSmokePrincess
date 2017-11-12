@@ -181,9 +181,9 @@ public class WorldStatus {
         double x = orientation.x;
         double y = orientation.y;
 
-        playerAlive = !(x == -1 && y == -1);
-
+        playerAlive = stateObs.isAvatarAlive();
         if (!playerAlive) {
+
             System.out.println("I'm Dead");
         }
 
