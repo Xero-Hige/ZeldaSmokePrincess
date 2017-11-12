@@ -49,7 +49,7 @@ public class Agent extends AbstractPlayer {
         planner.updateTheories(status, world, stateObs);
 
         ArrayList<ACTIONS> actions = stateObs.getAvailableActions();
-        return actions.get(planner.getNextAction(status));
+        return actions.get(planner.getNextAction(status, world));
     }
 
     @Override
@@ -63,7 +63,7 @@ public class Agent extends AbstractPlayer {
 
     private void persistPlanner() {
         planner.removeUnsuccess();
-        //planner.generalize();
+        planner.removeDuplicated();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         try (PrintWriter out = new PrintWriter("planner.json")) {
