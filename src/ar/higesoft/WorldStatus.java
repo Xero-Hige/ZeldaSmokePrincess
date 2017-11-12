@@ -21,6 +21,8 @@ import tools.Vector2d;
  */
 public class WorldStatus {
 
+    final public static int STATUS_SIZE = 16;
+
 
     private int player_row;
     private int player_column;
@@ -36,6 +38,9 @@ public class WorldStatus {
 
     private char facing_a = '0';
     private char facing_b = '0';
+
+    private char goalCol = '0';
+    private char goalRow = '0';
 
     private int action = 0;
 
@@ -117,7 +122,7 @@ public class WorldStatus {
     }
 
     public String getWorldStatus() {
-        char status[] = new char[14];
+        char status[] = new char[STATUS_SIZE];
 
         int row = getPlayer_row();
         int col = getPlayer_column();
@@ -142,6 +147,9 @@ public class WorldStatus {
 
         status[12] = facing_a;
         status[13] = facing_b;
+
+        status[14] = goalCol;
+        status[15] = goalRow;
 
         return new String(status);
     }
@@ -171,6 +179,29 @@ public class WorldStatus {
             facing_b = (y > 0) ? 'f' : 'b';
         }
 
+        updatePlayerKey(world);
+
+        goalCol = '0';
+        goalRow = '0';
+
+        if (has_key) {
+            if (player_column != door_column) {
+                goalCol = (player_column < door_column) ? 'f' : 'b';
+            }
+            if (player_row != door_row) {
+                goalRow = (player_row < door_row) ? 'f' : 'b';
+            }
+        } else {
+            if (player_column != key_column) {
+                goalCol = (player_column < key_column) ? 'f' : 'b';
+            }
+            if (player_row != key_row) {
+                goalRow = (player_row < key_row) ? 'f' : 'b';
+            }
+        }
+    }
+
+    private void updatePlayerKey(Perception world) {
         for (int i = 0; i < world.getLevelHeight(); i++) {
             for (int j = 0; j < world.getLevelWidth(); j++) {
 
