@@ -24,7 +24,7 @@ public class TestCeldas {
         int seed = new Random().nextInt();
 
         //Zelda Game and level to play      
-        int levelIdx = 4; //level names from 0 to 4 (game_lvlN.txt).
+        int levelIdx = 0; //level names from 0 to 4 (game_lvlN.txt).
         String game = gamesPath + "zelda.txt";
         String level1 = gamesPath + "zelda_lvl" + levelIdx + ".txt";
 
@@ -34,9 +34,12 @@ public class TestCeldas {
         // 1. This starts a game, in a level, played by a human.
         //ArcadeMachine.playOneGame(game, level1, recordActionsFile, seed);
 
-        // 2. This plays a game in a level by the controller.        
-        ArcadeMachine.runOneGame(game, level1, visuals, celdasAgent, recordActionsFile, seed, 0);
-
+        // 2. This plays a game in a level by the controller.
+        for (int i = 0; i < 10; i++) {
+            seed = new Random().nextInt();
+            level1 = gamesPath + "zelda_lvl" + i % 5 + ".txt";
+            ArcadeMachine.runOneGame(game, level1, visuals, celdasAgent, recordActionsFile, seed, 0);
+        }
         // 3. This replays a game from an action file previously recorded
         //String readActionsFile = recordActionsFile;
         //ArcadeMachine.replayGame(game, level1, visuals, readActionsFile);
