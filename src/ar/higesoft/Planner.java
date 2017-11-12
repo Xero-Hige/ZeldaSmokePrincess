@@ -2,6 +2,7 @@ package ar.higesoft;
 
 import core.game.StateObservation;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
@@ -154,10 +155,25 @@ public class Planner {
             }
         }
 
+        HashMap<Integer, Theory> options = new HashMap<>();
+
+        options.put(UP, new Theory(status, UP, status, -2000));
+        options.put(DOWN, new Theory(status, DOWN, status, -2000));
+        options.put(LEFT, new Theory(status, LEFT, status, -2000));
+        options.put(RIGHT, new Theory(status, RIGHT, status, -2000));
+        options.put(A, new Theory(status, A, status, -2000));
+
+        for (Theory t : theories) {
+            if (t.succesRateGet() > options.get(t.action).succesRateGet()) {
+                options.put(t.action, t);
+            }
+        }
+
         double max_delta = relevant_theories.get(0).delta;
         Theory best_theory = relevant_theories.get(0);
 
-        for (Theory t : relevant_theories) {
+        for (Theory t : options.values()) {
+
             if (t.delta < max_delta) {
                 continue;
             }
@@ -165,11 +181,6 @@ public class Planner {
             if (t.delta > max_delta) {
                 best_theory = t;
                 max_delta = t.delta;
-                continue;
-            }
-
-            if (best_theory.succesRateGet() < t.succesRateGet()) {
-                best_theory = t;
             }
         }
 
@@ -377,6 +388,10 @@ public class Planner {
         }
 
         public double succesRateGet() {
+            if (applied_times == 0) {
+                return 0;
+            }
+
             return (double) success_times / applied_times;
         }
 
