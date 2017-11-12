@@ -46,7 +46,7 @@ public class Agent extends AbstractPlayer {
     public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
         world.updateWorld(stateObs);
         String status = world.getWorldStatus();
-        planner.updateTheories(status, world);
+        planner.updateTheories(status, world, stateObs);
 
         ArrayList<ACTIONS> actions = stateObs.getAvailableActions();
         return actions.get(planner.getNextAction(status));
@@ -56,12 +56,14 @@ public class Agent extends AbstractPlayer {
     public void result(StateObservation stateObs, ElapsedCpuTimer elapsedCpuTimer) {
         world.updateWorld(stateObs);
         String status = world.getWorldStatus();
-        planner.updateTheories(status, world);
+        planner.updateTheories(status, world, stateObs);
 
         persistPlanner();
     }
 
     private void persistPlanner() {
+        planner.removeUnsuccess();
+        //planner.generalize();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         try (PrintWriter out = new PrintWriter("planner.json")) {
