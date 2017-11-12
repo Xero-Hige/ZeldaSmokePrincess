@@ -3,8 +3,12 @@ package ar.higesoft;
 import ar.fi.uba.celdas.Perception;
 import core.game.StateObservation;
 import tools.Vector2d;
+import tools.pathfinder.Node;
+import tools.pathfinder.PathFinder;
 
-import static java.lang.Math.sqrt;
+import java.util.ArrayList;
+
+import static ar.higesoft.Planner.*;
 
 /**
  * Copyright 2017
@@ -48,10 +52,16 @@ public class WorldStatus {
 
     private boolean playerAlive = true;
 
+    private PathFinder paths;
+    private StateObservation state;
+
     public WorldStatus(StateObservation stateObs) {
 
         has_key = false;
         Perception world = new Perception(stateObs);
+        ArrayList<Integer> obstacles = new ArrayList<>();
+        obstacles.add(0);
+        paths = new PathFinder(obstacles);
 
         for (int i = 0; i < world.getLevelHeight(); i++) {
             for (int j = 0; j < world.getLevelWidth(); j++) {
@@ -153,10 +163,16 @@ public class WorldStatus {
         status[14] = goalCol;
         status[15] = goalRow;
 
-        return new String(status);
+        if (has_key) {
+            return new String(status).replace('g', '+');
+        } else {
+            return new String(status).replace('g', 'w');
+        }
     }
 
     public void updateWorld(StateObservation stateObs) {
+        paths.run(stateObs);
+        this.state = stateObs;
 
         Perception world = new Perception(stateObs);
         perception = world;
@@ -225,19 +241,62 @@ public class WorldStatus {
         }
     }
 
-    public double getDistanceToGoal() {
-        int coldif;
-        int rowdif;
-
+    public int getDistanceToGoal() {
+        ArrayList<Node> list;
         if (has_key) {
-            coldif = player_column - door_column;
-            rowdif = player_row - door_row;
+            list = paths.getPath(new Vector2d(player_column, player_row), new Vector2d(door_column, door_row));
         } else {
-            coldif = player_column - key_column;
-            rowdif = player_row - key_row;
+            list = paths.getPath(new Vector2d(player_column, player_row), new Vector2d(key_column, key_row));
         }
 
-        return sqrt(coldif * coldif + rowdif * rowdif);
+        if (list != null) {
+            return list.size();
+        }
+
+        return 100;
+    }
+
+    public int getDistanceToGoalFrom(int direction) {
+        int playcol = player_column;
+        int playrow = player_row;
+
+        switch (direction) {
+            case UP:
+                playrow -= 1;
+                break;
+            case DOWN:
+                playrow += 1;
+                break;
+            case LEFT:
+                playcol -= 1;
+                break;
+            case RIGHT:
+                playcol += 1;
+                break;
+        }
+
+
+        int thisGoalRow;
+        int thisGoalCol;
+        if (has_key) {
+            thisGoalCol = door_column;
+            thisGoalRow = door_row;
+        } else {
+            thisGoalCol = key_column;
+            thisGoalRow = key_row;
+        }
+
+        ArrayList<Node> list = paths.getPath(new Vector2d(playcol, playrow), new Vector2d(thisGoalCol, thisGoalRow));
+
+        if (list != null) {
+            return list.size();
+        }
+
+        if (thisGoalCol == playcol && thisGoalRow == playrow) {
+            return 0;
+        }
+
+        return 100;
     }
 
 }
