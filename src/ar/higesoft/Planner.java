@@ -238,7 +238,7 @@ public class Planner {
         String e = applied_theory.consequences;
 
         if (wrong) {
-            retract(delta, s, s_p, e);
+            retract(t, delta, s, s_p, e);
         }
 
         if (!wrong && delta != applied_theory.delta) {
@@ -258,7 +258,7 @@ public class Planner {
         }
     }
 
-    private void retract(int delta, String s, String s_p, String e) {
+    private void retract(Theory retracted, int delta, String s, String s_p, String e) {
         char e_t2[] = e.toCharArray();
 
         for (int i = 0; i < predicted_status.length(); i++) {
@@ -273,7 +273,9 @@ public class Planner {
         }
 
         String e_t2_string = new String(e_t2);
-        Theory retracted = new Theory(s, applied_theory.action, e_t2_string, delta);
+
+        retracted.setConsequences(e_t2_string);
+        retracted.setDelta(delta);
         retracted.setApplied_times(1);
         retracted.setSuccess_times(1);
 
@@ -299,8 +301,8 @@ public class Planner {
     }
 
     public void removeUnsuccess() {
-        theories.removeIf(t -> (t.succesRateGet() == 1 && t.consequences.equals(t.causes)));
-        theories.removeIf(t -> t.succesRateGet() <= 0.1);
+        //theories.removeIf(t -> (t.succesRateGet() == 1 && t.consequences.equals(t.causes)));
+        //theories.removeIf(t -> t.succesRateGet() <= 0.1);
     }
 
     private static class Theory {
