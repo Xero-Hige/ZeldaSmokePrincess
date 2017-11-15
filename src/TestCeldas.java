@@ -37,7 +37,7 @@ public class TestCeldas {
         // 2. This plays a game in a level by the controller.
         for (int i = 0; i < 5; i++) {
             seed = new Random().nextInt();
-            level1 = gamesPath + "zelda_lvl" + i % 5 + ".txt";
+            level1 = gamesPath + "zelda_lvl" + i % 1 + ".txt";
             ArcadeMachine.runOneGame(game, level1, visuals, celdasAgent, recordActionsFile, seed, 0);
         }
         // 3. This replays a game from an action file previously recorded

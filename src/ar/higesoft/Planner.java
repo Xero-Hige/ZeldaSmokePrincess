@@ -33,8 +33,8 @@ public class Planner {
     private String predicted_status;
     private Theory applied_theory;
     private LinkedList<Theory> theories;
-    private int previousGain;
-    private double previousDistance;
+    private double previousScore;
+    private int previousDistance;
     private int executed = 0;
 
     public Planner() {
@@ -121,7 +121,7 @@ public class Planner {
         theories = new_theories;
     }
 
-    public int getNextAction(String status, WorldStatus world) {
+    public int getNextAction(String status, WorldStatus world, StateObservation stateObservation) {
         LinkedList<Theory> relevant_theories = new LinkedList<>();
 
         executed += 1;
@@ -141,7 +141,7 @@ public class Planner {
             int actions[] = {UP, DOWN, LEFT, RIGHT, A};
 
             for (int i : actions) {
-                Theory new_theory = new Theory(status, i, status, world.getDistanceToGoal() - world.getDistanceToGoalFrom(i));
+                Theory new_theory = new Theory(status, i, status, 0);
                 if (i == A) {
                     new_theory.delta = 10;
                 }
@@ -192,10 +192,7 @@ public class Planner {
                 if (i == best_theory.action) {
                     continue;
                 }
-                Theory new_theory = new Theory(status, i, status, world.getDistanceToGoal() - world.getDistanceToGoalFrom(i));
-                if (i == A) {
-                    new_theory.delta = 10;
-                }
+                Theory new_theory = new Theory(status, i, status, 10);
                 new_theory.applied_times = 1;
                 new_theory.success_times = 1;
                 theories.addLast(new_theory);
@@ -207,13 +204,8 @@ public class Planner {
         predicted_status = best_theory.consequences;
         best_theory.applied_times += 1;
         previousDistance = world.getDistanceToGoal();
+        previousScore = (int) stateObservation.getGameScore();
         return best_theory.action;
-    }
-
-    private int calcGain(WorldStatus world, StateObservation stateObs) {
-        int distance = world.getDistanceToGoal();
-
-        return distance * -1 + 100 * ((world.getHasKey()) ? 1 : 0) + (int) (300 * stateObs.getGameScore());
     }
 
     public void updateTheories(String status, WorldStatus world, StateObservation stateObs) {
@@ -236,8 +228,8 @@ public class Planner {
         }
 
 
-        int new_gain = calcGain(world, stateObs);
-        int delta = computeDelta(status, world, new_gain);
+        //int new_gain = calcGain(world, stateObs);
+        int delta = computeDelta(world, stateObs);
 
         String s = previous_status;
         String s_p = status;
@@ -264,8 +256,6 @@ public class Planner {
         if (!wrong && delta == applied_theory.delta) {
             applied_theory.success_times += 1;
         }
-
-        previousGain = new_gain;
     }
 
     private void retract(int delta, String s, String s_p, String e) {
@@ -290,25 +280,22 @@ public class Planner {
         theories.addLast(retracted);
     }
 
-    private int computeDelta(String status, WorldStatus world, int new_gain) {
-        int delta = previousGain - new_gain;
-
-        if (new_gain == previousGain) { //Nothing best
-
-            if (previous_status.equals(status)) { //Not moved
-                delta = -300;
-                applied_theory.delta = -300;
-            }
-        }
-
-        if (world.getDistanceToGoal() == world.getDistanceToGoal() && world.isPlayerAlive()) {
-            delta = -4;
-        }
-
+    private int computeDelta(WorldStatus world, StateObservation stateObservation) {
         if (!world.isPlayerAlive()) { //Dead
-            delta = -1000;
+            return -1000;
         }
-        return delta;
+
+        System.out.println(String.format("Ticks %d", stateObservation.getGameTick()));
+        if (stateObservation.getGameTick() > 1999) { //Dead
+            return -1000;
+        }
+
+        int actual_distance = world.getDistanceToGoal();
+
+        if (previousDistance == actual_distance) {
+            if (stateObservation.getGameScore() == previousScore) return -2;
+            else return stateObservation.getGameScore() > previousScore ? 10 : -10;
+        } else return previousDistance < actual_distance ? -2 : 2;
     }
 
     public void removeUnsuccess() {

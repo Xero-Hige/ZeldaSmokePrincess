@@ -49,7 +49,7 @@ public class Agent extends AbstractPlayer {
         planner.updateTheories(status, world, stateObs);
 
         ArrayList<ACTIONS> actions = stateObs.getAvailableActions();
-        return actions.get(planner.getNextAction(status, world));
+        return actions.get(planner.getNextAction(status, world, stateObs));
     }
 
     @Override
