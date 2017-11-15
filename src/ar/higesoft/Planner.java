@@ -127,7 +127,7 @@ public class Planner {
         executed += 1;
         if (executed % 16 == 15) {
             removeUnsuccess();
-            removeDuplicated();
+            //removeDuplicated();
         }
 
         for (Theory t : theories) {
@@ -142,9 +142,6 @@ public class Planner {
 
             for (int i : actions) {
                 Theory new_theory = new Theory(status, i, status, 0);
-                if (i == A) {
-                    new_theory.delta = 10;
-                }
                 new_theory.applied_times = 1;
                 new_theory.success_times = 1;
                 relevant_theories.push(new_theory);
@@ -187,7 +184,7 @@ public class Planner {
             }
         }
 
-        if (max_delta < -2) {
+        if (max_delta < 0) {
 
             int actions[] = {UP, DOWN, LEFT, RIGHT, A};
 
@@ -195,7 +192,7 @@ public class Planner {
                 if (i == best_theory.action) {
                     continue;
                 }
-                Theory new_theory = new Theory(status, i, status, 10);
+                Theory new_theory = new Theory(status, i, status, 0);
                 new_theory.applied_times = 1;
                 new_theory.success_times = 1;
                 theories.addLast(new_theory);
