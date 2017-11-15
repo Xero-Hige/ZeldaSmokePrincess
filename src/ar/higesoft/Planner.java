@@ -164,9 +164,12 @@ public class Planner {
         options.put(A, new Theory(status, A, status, -2000));
 
         for (Theory t : theories) {
-            if (t.succesRateGet() > options.get(t.action).succesRateGet()) {
+            if (t.delta > options.get(t.action).delta) {
                 options.put(t.action, t);
             }
+            //if (t.succesRateGet() > options.get(t.action).succesRateGet()) {
+            //    options.put(t.action, t);
+            //}
         }
 
         double max_delta = relevant_theories.get(0).delta;
@@ -276,8 +279,8 @@ public class Planner {
 
         retracted.setConsequences(e_t2_string);
         retracted.setDelta(delta);
-        retracted.setApplied_times(1);
-        retracted.setSuccess_times(1);
+        //retracted.setApplied_times(1);
+        //retracted.setSuccess_times(1);
 
         theories.addLast(retracted);
     }
