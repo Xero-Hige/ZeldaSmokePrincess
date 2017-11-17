@@ -1,6 +1,7 @@
 package ar.higesoft;
 
 import core.game.StateObservation;
+import tools.Vector2d;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,6 +37,7 @@ public class Planner {
     private double previousScore;
     private int previousDistance;
     private int executed = 0;
+    private Vector2d previousOrientation = new Vector2d(0, 0);
 
     public Planner() {
         theories = new LinkedList<>();
@@ -295,9 +297,11 @@ public class Planner {
         int actual_distance = world.getDistanceToGoal();
 
         if (previousDistance == actual_distance) {
-            if (stateObservation.getGameScore() == previousScore) return -2;
-            else return stateObservation.getGameScore() > previousScore ? 10 : -10;
-        } else return previousDistance < actual_distance ? -2 : 2;
+            if (stateObservation.getGameScore() == previousScore)
+                return stateObservation.getAvatarOrientation() != previousOrientation ? -1 : -3;
+            return stateObservation.getGameScore() > previousScore ? 10 : -10;
+        }
+        return previousDistance < actual_distance ? -2 : 3;
     }
 
     public void removeUnsuccess() {
