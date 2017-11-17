@@ -162,7 +162,7 @@ public class Planner {
         options.put(RIGHT, new Theory(status, RIGHT, status, -2000));
         options.put(A, new Theory(status, A, status, -2000));
 
-        for (Theory t : theories) {
+        for (Theory t : relevant_theories) {
             if (t.delta > options.get(t.action).delta) {
                 options.put(t.action, t);
             }
@@ -281,7 +281,7 @@ public class Planner {
         //retracted.setApplied_times(1);
         //retracted.setSuccess_times(1);
 
-        theories.addLast(retracted);
+        //theories.addLast(retracted);
     }
 
     private int computeDelta(WorldStatus world, StateObservation stateObservation) {
@@ -306,7 +306,7 @@ public class Planner {
 
     public void removeUnsuccess() {
         //theories.removeIf(t -> (t.succesRateGet() == 1 && t.consequences.equals(t.causes)));
-        //theories.removeIf(t -> t.succesRateGet() <= 0.1);
+        theories.removeIf(t -> t.succesRateGet() <= 0.1);
     }
 
     private static class Theory {
