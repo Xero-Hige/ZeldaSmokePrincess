@@ -3,6 +3,7 @@ package ar.higesoft;
 import core.game.StateObservation;
 import tools.Vector2d;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -54,10 +55,7 @@ public class Planner {
 
     public void removeDummys() {
         theories.removeIf(t ->
-                t.applied_times == 1 &&
-                        t.success_times == 1 &&
-                        t.delta == 0 &&
-                        t.causes.equals(t.consequences)
+                t.delta == 0
         );
     }
 
@@ -93,22 +91,10 @@ public class Planner {
         this.theories = theories;
     }
 
-    public void removeDuplicated() {
-        theories.sort((a1, a2) -> {
-            if (!a1.causes.equals(a2.causes)) {
-                return a1.causes.compareTo(a2.causes);
-            }
+    public void generalizeTheories() {
+        //FIXME: Name
 
-            if (!a1.consequences.equals(a2.consequences)) {
-                return a1.consequences.compareTo(a2.consequences);
-            }
-
-            if (a1.delta != a2.delta) {
-                return Integer.compare(a1.delta, a2.delta);
-            }
-
-            return Integer.compare(a1.action, a2.action);
-        });
+        theories.sort(getTheoryComparator());
 
         LinkedList<Theory> new_theories = new LinkedList<>();
 
@@ -132,12 +118,59 @@ public class Planner {
         theories = new_theories;
     }
 
+    public void removeDuplicated() {
+        theories.sort(getTheoryComparator());
+
+        LinkedList<Theory> new_theories = new LinkedList<>();
+
+        Theory a = theories.removeFirst();
+        while (theories.size() > 0) {
+            Theory b = theories.removeFirst();
+
+            if (a.areEquals(b)) {
+                a.setApplied_times(a.getApplied_times() + b.getApplied_times());
+                a.setSuccess_times(a.getSuccess_times() + b.getSuccess_times());
+            } else {
+                new_theories.addLast(a);
+                a = b;
+            }
+        }
+
+        if (a != new_theories.getLast()) {
+            new_theories.addLast(a);
+        }
+
+        theories = new_theories;
+    }
+
+    private Comparator<Theory> getTheoryComparator() {
+        return (a1, a2) -> {
+            if (!a1.consequences.equals(a2.consequences)) {
+                return a1.consequences.compareTo(a2.consequences);
+            }
+
+            if (a1.delta != a2.delta) {
+                return Integer.compare(a1.delta, a2.delta);
+            }
+
+            if (a1.action != a2.action) {
+                return Integer.compare(a1.action, a2.action);
+            }
+
+            if (!a1.causes.equals(a2.causes)) {
+                return a1.causes.compareTo(a2.causes);
+            }
+
+            return Double.compare(a2.succesRateGet(), a1.succesRateGet());
+        };
+    }
+
     public int getNextAction(String status, WorldStatus world, StateObservation stateObservation) {
 
         executed += 1;
-        if (executed % 16 == 15) {
+        if (executed % 16 == 0) {
+            //removeDummys();
             removeUnsuccess();
-            //removeDuplicated();
         }
 
         HashMap<Integer, Theory> options = getAllOptionsAtState(status);
@@ -183,6 +216,7 @@ public class Planner {
         bestTheory.applied_times += 1;
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
+        previousOrientation = stateObservation.getAvatarOrientation();
         return bestTheory.action;
     }
 
@@ -230,12 +264,12 @@ public class Planner {
         options.put(A, new Theory(status, A, status, -2000));
 
         for (Theory t : relevant_theories) {
-            if (t.delta > options.get(t.action).delta) {
-                options.put(t.action, t);
-            }
-            //if (t.succesRateGet() > options.get(t.action).succesRateGet()) {
+            //if (t.delta > options.get(t.action).delta) {
             //    options.put(t.action, t);
             //}
+            if (t.succesRateGet() > options.get(t.action).succesRateGet()) {
+                options.put(t.action, t);
+            }
         }
         return options;
     }
@@ -337,7 +371,7 @@ public class Planner {
             return -1000;
         }
 
-        System.out.println(String.format("Ticks %d", stateObservation.getGameTick()));
+        //System.out.println(String.format("Ticks %d", stateObservation.getGameTick()));
         if (stateObservation.getGameTick() > 1999) { //Dead
             return -1000;
         }
@@ -463,6 +497,18 @@ public class Planner {
             }
 
             return this.causes.equals(other.causes);
+        }
+
+        boolean areEquivalents(Theory other) {
+            if (this.action != other.action) {
+                return false;
+            }
+
+            if (this.delta != other.delta) {
+                return false;
+            }
+
+            return this.consequences.equals(other.consequences);
         }
     }
 }
