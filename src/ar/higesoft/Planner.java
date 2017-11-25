@@ -124,13 +124,14 @@ public class Planner {
     }
 
     public int getNextAction(String status, WorldStatus world, StateObservation stateObservation) {
-        LinkedList<Theory> relevant_theories = new LinkedList<>();
 
         executed += 1;
         if (executed % 16 == 15) {
             removeUnsuccess();
             //removeDuplicated();
         }
+
+        LinkedList<Theory> relevant_theories = new LinkedList<>();
 
         for (Theory t : theories) {
             if (t.apply_to(status)) {
@@ -171,21 +172,9 @@ public class Planner {
             //}
         }
 
-        double max_delta = relevant_theories.get(0).delta;
-        Theory best_theory = relevant_theories.get(0);
+        Theory best_theory = getBestTheoryFromOptions(options);
 
-        for (Theory t : options.values()) {
-
-            if (t.delta < max_delta) {
-                continue;
-            }
-
-            if (t.delta > max_delta) {
-                best_theory = t;
-                max_delta = t.delta;
-            }
-        }
-
+        double max_delta = best_theory.delta;
         if (max_delta < 0) {
 
             int actions[] = {UP, DOWN, LEFT, RIGHT, A};
@@ -208,6 +197,24 @@ public class Planner {
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
         return best_theory.action;
+    }
+
+    private Theory getBestTheoryFromOptions(HashMap<Integer, Theory> options) {
+        Theory best_theory = new Theory();
+        double max_delta = -2000;
+
+        for (Theory t : options.values()) {
+
+            if (t.delta < max_delta) {
+                continue;
+            }
+
+            if (t.delta > max_delta) {
+                best_theory = t;
+                max_delta = t.delta;
+            }
+        }
+        return best_theory;
     }
 
     public void updateTheories(String status, WorldStatus world, StateObservation stateObs) {
