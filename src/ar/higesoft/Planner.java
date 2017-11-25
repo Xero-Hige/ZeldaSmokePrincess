@@ -30,6 +30,7 @@ public class Planner {
     public static final int RIGHT = 2;
 
     public static final int A = 0;
+    public static final char WILDCARD_CAUSES = '€';
 
     private String previous_status;
     private String predicted_status;
@@ -96,51 +97,61 @@ public class Planner {
 
         theories.sort(getTheoryComparator());
 
-        LinkedList<Theory> new_theories = new LinkedList<>();
+        LinkedList<Theory> newTheories = new LinkedList<>();
 
-        Theory a = theories.removeFirst();
-        while (theories.size() > 0) {
-            Theory b = theories.removeFirst();
+        for (int i = 0; i < theories.size(); i += 2) {
+            Theory a = theories.get(i);
+            Theory b = theories.get(i + 1);
 
-            if (a.areEquals(b)) {
-                a.setApplied_times(a.getApplied_times() + b.getApplied_times());
-                a.setSuccess_times(a.getSuccess_times() + b.getSuccess_times());
-            } else {
-                new_theories.addLast(a);
-                a = b;
+            if (a.isEquivalentTo(b) && !a.causes.equals(b.causes)) {
+
+                char causes[] = a.causes.toCharArray();
+                char anotherCauses[] = b.causes.toCharArray();
+
+                for (int j = 0; j < causes.length; j++) {
+                    if (causes[i] != anotherCauses[i]) {
+                        causes[i] = WILDCARD_CAUSES;
+                    }
+                }
+
+                Theory newTheory = new Theory(new String(causes), a.action, a.consequences, a.delta);
+                newTheory.appliedTimes = a.appliedTimes + b.appliedTimes;
+                newTheory.successTimes = a.successTimes + b.successTimes;
+
+                newTheories.addLast(newTheory);
             }
         }
 
-        if (a != new_theories.getLast()) {
-            new_theories.addLast(a);
+        for (Theory t : newTheories) {
+            theories.addLast(t);
         }
 
-        theories = new_theories;
+        theories = newTheories;
     }
 
     public void removeDuplicated() {
         theories.sort(getTheoryComparator());
 
-        LinkedList<Theory> new_theories = new LinkedList<>();
+        LinkedList<Theory> newTheories = new LinkedList<>();
 
         Theory a = theories.removeFirst();
         while (theories.size() > 0) {
             Theory b = theories.removeFirst();
 
             if (a.areEquals(b)) {
-                a.setApplied_times(a.getApplied_times() + b.getApplied_times());
-                a.setSuccess_times(a.getSuccess_times() + b.getSuccess_times());
+                a.setAppliedTimes(a.getAppliedTimes() + b.getAppliedTimes());
+                a.setSuccessTimes(a.getSuccessTimes() + b.getSuccessTimes());
             } else {
-                new_theories.addLast(a);
+                newTheories.addLast(a);
                 a = b;
             }
         }
 
-        if (a != new_theories.getLast()) {
-            new_theories.addLast(a);
+        if (a != newTheories.getLast()) {
+            newTheories.addLast(a);
         }
 
-        theories = new_theories;
+        theories = newTheories;
     }
 
     private Comparator<Theory> getTheoryComparator() {
@@ -204,8 +215,8 @@ public class Planner {
                     continue;
                 }
                 Theory new_theory = new Theory(status, i, status, 0);
-                new_theory.applied_times = 1;
-                new_theory.success_times = 1;
+                new_theory.appliedTimes = 1;
+                new_theory.successTimes = 1;
                 theories.addLast(new_theory);
             }
         }
@@ -213,7 +224,7 @@ public class Planner {
         applied_theory = bestTheory;
         previous_status = status;
         predicted_status = bestTheory.consequences;//TODO: Check
-        bestTheory.applied_times += 1;
+        bestTheory.appliedTimes += 1;
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
         previousOrientation = stateObservation.getAvatarOrientation();
@@ -234,7 +245,7 @@ public class Planner {
         LinkedList<Theory> relevant_theories = new LinkedList<>();
 
         for (Theory t : theories) {
-            if (t.apply_to(status)) {
+            if (t.doesApplyTo(status)) {
                 relevant_theories.push(t);
             }
         }
@@ -245,8 +256,8 @@ public class Planner {
             //TODO: Check
             for (int i : actions) {
                 Theory new_theory = new Theory(status, i, status, 0);
-                new_theory.applied_times = 1;
-                new_theory.success_times = 1;
+                new_theory.appliedTimes = 1;
+                new_theory.successTimes = 1;
                 relevant_theories.push(new_theory);
             }
 
@@ -327,8 +338,8 @@ public class Planner {
 
         if (!wrong && delta != applied_theory.delta) {
             Theory new_theory = new Theory(applied_theory.causes, applied_theory.action, applied_theory.consequences, delta);
-            new_theory.setSuccess_times(1);
-            new_theory.setApplied_times(1);
+            new_theory.setSuccessTimes(1);
+            new_theory.setAppliedTimes(1);
 
             theories.addLast(new_theory);
         }
@@ -338,7 +349,7 @@ public class Planner {
         }
 
         if (!wrong && delta == applied_theory.delta) {
-            applied_theory.success_times += 1;
+            applied_theory.successTimes += 1;
         }
     }
 
@@ -360,8 +371,8 @@ public class Planner {
 
         retracted.setConsequences(e_t2_string);
         retracted.setDelta(delta);
-        //retracted.setApplied_times(1);
-        //retracted.setSuccess_times(1);
+        //retracted.setAppliedTimes(1);
+        //retracted.setSuccessTimes(1);
 
         //theories.addLast(retracted);
     }
@@ -397,8 +408,8 @@ public class Planner {
         String consequences;
         int delta;
 
-        int applied_times = 0;
-        int success_times = 0;
+        int appliedTimes = 0;
+        int successTimes = 0;
 
         Theory(String causes, int action, String consequences, int delta) {
             this.causes = causes;
@@ -446,33 +457,33 @@ public class Planner {
             this.action = action;
         }
 
-        public int getApplied_times() {
-            return applied_times;
+        public int getAppliedTimes() {
+            return appliedTimes;
         }
 
-        public void setApplied_times(int applied_times) {
-            this.applied_times = applied_times;
+        public void setAppliedTimes(int appliedTimes) {
+            this.appliedTimes = appliedTimes;
         }
 
-        public int getSuccess_times() {
-            return success_times;
+        public int getSuccessTimes() {
+            return successTimes;
         }
 
-        public void setSuccess_times(int success_times) {
-            this.success_times = success_times;
+        public void setSuccessTimes(int successTimes) {
+            this.successTimes = successTimes;
         }
 
         public double succesRateGet() {
-            if (applied_times == 0) {
+            if (appliedTimes == 0) {
                 return 0;
             }
 
-            return (double) success_times / applied_times;
+            return (double) successTimes / appliedTimes;
         }
 
-        boolean apply_to(String status) {
+        boolean doesApplyTo(String status) {
             for (int i = 0; i < status.length(); i++) {
-                if (causes.charAt(i) == '€') {
+                if (causes.charAt(i) == WILDCARD_CAUSES) {
                     continue;
                 }
 
@@ -499,7 +510,7 @@ public class Planner {
             return this.causes.equals(other.causes);
         }
 
-        boolean areEquivalents(Theory other) {
+        boolean isEquivalentTo(Theory other) {
             if (this.action != other.action) {
                 return false;
             }
