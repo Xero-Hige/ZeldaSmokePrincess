@@ -62,9 +62,10 @@ public class Agent extends AbstractPlayer {
     }
 
     private void persistPlanner() {
+        planner.removeDummys();
         planner.removeUnsuccess();
         planner.removeDuplicated();
-        planner.removeDummys();
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         try (PrintWriter out = new PrintWriter("planner.json")) {
