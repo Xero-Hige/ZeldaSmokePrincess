@@ -133,15 +133,32 @@ public class Planner {
 
         HashMap<Integer, Theory> options = getAllOptionsAtState(status);
 
-        Theory best_theory = getBestTheoryFromOptions(options);
 
-        double max_delta = best_theory.delta;
-        if (max_delta < 0) {
+        Theory bestTheory = new Theory();
+        int bestDelta = -9999;
+
+        for (Theory t : options.values()) {
+
+            char predictedStatus[] = status.toCharArray();
+            char consequences[] = t.getConsequences().toCharArray();
+
+            predictNextState(predictedStatus, consequences);
+
+            HashMap<Integer, Theory> predicted_options = getAllOptionsAtState(new String(predictedStatus));
+            Theory nextTheory = getBestTheoryFromOptions(predicted_options);
+
+            if (t.delta + nextTheory.delta > bestDelta) {
+                bestTheory = t;
+                bestDelta = t.delta + nextTheory.delta;
+            }
+        }
+
+        if (bestDelta < 0) {
 
             int actions[] = {UP, DOWN, LEFT, RIGHT, A};
 
             for (int i : actions) {
-                if (i == best_theory.action) {
+                if (i == bestTheory.action) {
                     continue;
                 }
                 Theory new_theory = new Theory(status, i, status, 0);
@@ -151,13 +168,23 @@ public class Planner {
             }
         }
 
-        applied_theory = best_theory;
+        applied_theory = bestTheory;
         previous_status = status;
-        predicted_status = best_theory.consequences;
-        best_theory.applied_times += 1;
+        predicted_status = bestTheory.consequences;//TODO: Check
+        bestTheory.applied_times += 1;
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
-        return best_theory.action;
+        return bestTheory.action;
+    }
+
+    private void predictNextState(char[] predictedStatus, char[] consequences) {
+        for (int i = 0; i < consequences.length; i++) {
+            if (consequences[i] == '-') {
+                continue;
+            }
+
+            predictedStatus[i] = consequences[i];
+        }
     }
 
     private HashMap<Integer, Theory> getAllOptionsAtState(String status) {
@@ -172,7 +199,7 @@ public class Planner {
         if (relevant_theories.size() == 0) {
 
             int actions[] = {UP, DOWN, LEFT, RIGHT, A};
-
+            //TODO: Check
             for (int i : actions) {
                 Theory new_theory = new Theory(status, i, status, 0);
                 new_theory.applied_times = 1;
