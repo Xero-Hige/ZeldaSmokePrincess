@@ -131,6 +131,36 @@ public class Planner {
             //removeDuplicated();
         }
 
+        HashMap<Integer, Theory> options = getAllOptionsAtState(status);
+
+        Theory best_theory = getBestTheoryFromOptions(options);
+
+        double max_delta = best_theory.delta;
+        if (max_delta < 0) {
+
+            int actions[] = {UP, DOWN, LEFT, RIGHT, A};
+
+            for (int i : actions) {
+                if (i == best_theory.action) {
+                    continue;
+                }
+                Theory new_theory = new Theory(status, i, status, 0);
+                new_theory.applied_times = 1;
+                new_theory.success_times = 1;
+                theories.addLast(new_theory);
+            }
+        }
+
+        applied_theory = best_theory;
+        previous_status = status;
+        predicted_status = best_theory.consequences;
+        best_theory.applied_times += 1;
+        previousDistance = world.getDistanceToGoal();
+        previousScore = (int) stateObservation.getGameScore();
+        return best_theory.action;
+    }
+
+    private HashMap<Integer, Theory> getAllOptionsAtState(String status) {
         LinkedList<Theory> relevant_theories = new LinkedList<>();
 
         for (Theory t : theories) {
@@ -171,32 +201,7 @@ public class Planner {
             //    options.put(t.action, t);
             //}
         }
-
-        Theory best_theory = getBestTheoryFromOptions(options);
-
-        double max_delta = best_theory.delta;
-        if (max_delta < 0) {
-
-            int actions[] = {UP, DOWN, LEFT, RIGHT, A};
-
-            for (int i : actions) {
-                if (i == best_theory.action) {
-                    continue;
-                }
-                Theory new_theory = new Theory(status, i, status, 0);
-                new_theory.applied_times = 1;
-                new_theory.success_times = 1;
-                theories.addLast(new_theory);
-            }
-        }
-
-        applied_theory = best_theory;
-        previous_status = status;
-        predicted_status = best_theory.consequences;
-        best_theory.applied_times += 1;
-        previousDistance = world.getDistanceToGoal();
-        previousScore = (int) stateObservation.getGameScore();
-        return best_theory.action;
+        return options;
     }
 
     private Theory getBestTheoryFromOptions(HashMap<Integer, Theory> options) {
