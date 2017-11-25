@@ -52,6 +52,15 @@ public class Planner {
         applied_theory = null;
     }
 
+    public void removeDummys() {
+        theories.removeIf(t ->
+                t.applied_times == 1 &&
+                        t.success_times == 1 &&
+                        t.delta == 0 &&
+                        t.causes.equals(t.consequences)
+        );
+    }
+
     public String getPrevious_status() {
         return previous_status;
     }
