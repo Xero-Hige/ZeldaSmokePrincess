@@ -32,9 +32,9 @@ public class Planner {
     public static final int A = 0;
     public static final char WILDCARD_CAUSES = '€';
 
-    private String previous_status;
-    private String predicted_status;
-    private Theory applied_theory;
+    private String previousStatus;
+    private String predictedStatus;
+    private Theory appliedTheory;
     private LinkedList<Theory> theories;
     private double previousScore;
     private int previousDistance;
@@ -43,15 +43,15 @@ public class Planner {
 
     public Planner() {
         theories = new LinkedList<>();
-        predicted_status = "-";
-        previous_status = "-";
-        applied_theory = null;
+        predictedStatus = "-";
+        previousStatus = "-";
+        appliedTheory = null;
     }
 
     public void cleanPlanner() {
-        predicted_status = "-";
-        previous_status = "-";
-        applied_theory = null;
+        predictedStatus = "-";
+        previousStatus = "-";
+        appliedTheory = null;
     }
 
     public void removeDummys() {
@@ -60,28 +60,28 @@ public class Planner {
         );
     }
 
-    public String getPrevious_status() {
-        return previous_status;
+    public String getPreviousStatus() {
+        return previousStatus;
     }
 
-    public void setPrevious_status(String previous_status) {
-        this.previous_status = previous_status;
+    public void setPreviousStatus(String previousStatus) {
+        this.previousStatus = previousStatus;
     }
 
-    public String getPredicted_status() {
-        return predicted_status;
+    public String getPredictedStatus() {
+        return predictedStatus;
     }
 
-    public void setPredicted_status(String predicted_status) {
-        this.predicted_status = predicted_status;
+    public void setPredictedStatus(String predictedStatus) {
+        this.predictedStatus = predictedStatus;
     }
 
-    public Theory getApplied_theory() {
-        return applied_theory;
+    public Theory getAppliedTheory() {
+        return appliedTheory;
     }
 
-    public void setApplied_theory(Theory applied_theory) {
-        this.applied_theory = applied_theory;
+    public void setAppliedTheory(Theory appliedTheory) {
+        this.appliedTheory = appliedTheory;
     }
 
     public LinkedList<Theory> getTheories() {
@@ -221,9 +221,9 @@ public class Planner {
             }
         }
 
-        applied_theory = bestTheory;
-        previous_status = status;
-        predicted_status = bestTheory.consequences;//TODO: Check
+        appliedTheory = bestTheory;
+        previousStatus = status;
+        predictedStatus = bestTheory.consequences;//TODO: Check
         bestTheory.appliedTimes += 1;
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
@@ -304,19 +304,19 @@ public class Planner {
     }
 
     public void updateTheories(String status, WorldStatus world, StateObservation stateObs) {
-        //System.out.println(String.format("Status: %s Action: %d", status, applied_theory.action));
-        if (applied_theory == null) {
+        //System.out.println(String.format("Status: %s Action: %d", status, appliedTheory.action));
+        if (appliedTheory == null) {
             return;
         }
 
         boolean wrong = false;
 
-        for (int i = 0; i < predicted_status.length(); i++) {
-            if (predicted_status.charAt(i) == '-') {
+        for (int i = 0; i < predictedStatus.length(); i++) {
+            if (predictedStatus.charAt(i) == '-') {
                 continue;
             }
 
-            if (predicted_status.charAt(i) != status.charAt(i)) {
+            if (predictedStatus.charAt(i) != status.charAt(i)) {
                 wrong = true;
                 break;
             }
@@ -326,37 +326,37 @@ public class Planner {
         //int new_gain = calcGain(world, stateObs);
         int delta = computeDelta(world, stateObs);
 
-        String s = previous_status;
+        String s = previousStatus;
         String s_p = status;
-        Theory t = applied_theory;
-        String c = applied_theory.causes;
-        String e = applied_theory.consequences;
+        Theory t = appliedTheory;
+        String c = appliedTheory.causes;
+        String e = appliedTheory.consequences;
 
         if (wrong) {
             retract(t, delta, s, s_p, e);
         }
 
-        if (!wrong && delta != applied_theory.delta) {
-            Theory new_theory = new Theory(applied_theory.causes, applied_theory.action, applied_theory.consequences, delta);
-            new_theory.setSuccessTimes(1);
-            new_theory.setAppliedTimes(1);
+        if (!wrong && delta != appliedTheory.delta) {
+            Theory newTheory = new Theory(appliedTheory.causes, appliedTheory.action, appliedTheory.consequences, delta);
+            newTheory.setSuccessTimes(1);
+            newTheory.setAppliedTimes(1);
 
-            theories.addLast(new_theory);
+            theories.addLast(newTheory);
         }
 
         if (!world.isPlayerAlive()) {
-            applied_theory.delta = delta;
+            appliedTheory.delta = delta;
         }
 
-        if (!wrong && delta == applied_theory.delta) {
-            applied_theory.successTimes += 1;
+        if (!wrong && delta == appliedTheory.delta) {
+            appliedTheory.successTimes += 1;
         }
     }
 
     private void retract(Theory retracted, int delta, String s, String s_p, String e) {
         char e_t2[] = e.toCharArray();
 
-        for (int i = 0; i < predicted_status.length(); i++) {
+        for (int i = 0; i < predictedStatus.length(); i++) {
             if (e.charAt(i) == '-') {
                 e_t2[i] = '-';
                 continue;
@@ -387,14 +387,14 @@ public class Planner {
             return -1000;
         }
 
-        int actual_distance = world.getDistanceToGoal();
+        int actualDistance = world.getDistanceToGoal();
 
-        if (previousDistance == actual_distance) {
+        if (previousDistance == actualDistance) {
             if (stateObservation.getGameScore() == previousScore)
                 return stateObservation.getAvatarOrientation() != previousOrientation ? -1 : -3;
             return stateObservation.getGameScore() > previousScore ? 10 : -10;
         }
-        return previousDistance < actual_distance ? -2 : 3;
+        return previousDistance < actualDistance ? -2 : 3;
     }
 
     public void removeUnsuccess() {
