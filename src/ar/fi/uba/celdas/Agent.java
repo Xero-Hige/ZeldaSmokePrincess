@@ -64,6 +64,7 @@ public class Agent extends AbstractPlayer {
     private void persistPlanner() {
         planner.removeDummys();
         planner.removeUnsuccess();
+        planner.generalizeTheories();
         planner.removeDuplicated();
 
         ObjectMapper mapper = new ObjectMapper();
