@@ -3,9 +3,7 @@ package ar.higesoft;
 import core.game.StateObservation;
 import tools.Vector2d;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * Copyright 2017
@@ -24,13 +22,13 @@ import java.util.LinkedList;
  */
 public class Planner {
 
-    public static final int UP = 4;
-    public static final int DOWN = 3;
-    public static final int LEFT = 1;
-    public static final int RIGHT = 2;
+    static final int UP = 4;
+    static final int DOWN = 3;
+    static final int LEFT = 1;
+    static final int RIGHT = 2;
 
     public static final int A = 0;
-    public static final char WILDCARD_CAUSES = '€';
+    static final char WILDCARD_CAUSES = '€';
 
     private String previousStatus;
     private String predictedStatus;
@@ -41,24 +39,6 @@ public class Planner {
     private int executed = 0;
     private Vector2d previousOrientation = new Vector2d(0, 0);
 
-    public Planner() {
-        theories = new LinkedList<>();
-        predictedStatus = "-";
-        previousStatus = "-";
-        appliedTheory = null;
-    }
-
-    public void cleanPlanner() {
-        predictedStatus = "-";
-        previousStatus = "-";
-        appliedTheory = null;
-    }
-
-    public void removeDummys() {
-        theories.removeIf(t ->
-                t.delta == 0
-        );
-    }
 
     public String getPreviousStatus() {
         return previousStatus;
@@ -92,6 +72,26 @@ public class Planner {
         this.theories = theories;
     }
 
+
+    public Planner() {
+        theories = new LinkedList<>();
+        predictedStatus = "-";
+        previousStatus = "-";
+        appliedTheory = null;
+    }
+
+    public void cleanPlanner() {
+        predictedStatus = "-";
+        previousStatus = "-";
+        appliedTheory = null;
+    }
+
+    public void removeDummys() {
+        theories.removeIf(t ->
+                t.delta == 0
+        );
+    }
+
     public void generalizeTheories() {
         //FIXME: Name
 
@@ -99,7 +99,7 @@ public class Planner {
 
         LinkedList<Theory> newTheories = new LinkedList<>();
 
-        for (int i = 0; i < theories.size(); i += 2) {
+        for (int i = 0; i + 1 < theories.size(); i += 2) {
             Theory a = theories.get(i);
             Theory b = theories.get(i + 1);
 
@@ -109,8 +109,8 @@ public class Planner {
                 char anotherCauses[] = b.causes.toCharArray();
 
                 for (int j = 0; j < causes.length; j++) {
-                    if (causes[i] != anotherCauses[i]) {
-                        causes[i] = WILDCARD_CAUSES;
+                    if (causes[j] != anotherCauses[j]) {
+                        causes[j] = WILDCARD_CAUSES;
                     }
                 }
 
@@ -125,8 +125,6 @@ public class Planner {
         for (Theory t : newTheories) {
             theories.addLast(t);
         }
-
-        theories = newTheories;
     }
 
     public void removeDuplicated() {
@@ -172,7 +170,7 @@ public class Planner {
                 return a1.causes.compareTo(a2.causes);
             }
 
-            return Double.compare(a2.succesRateGet(), a1.succesRateGet());
+            return Double.compare(a2.successRateGet(), a1.successRateGet());
         };
     }
 
@@ -200,9 +198,15 @@ public class Planner {
             HashMap<Integer, Theory> predicted_options = getAllOptionsAtState(new String(predictedStatus));
             Theory nextTheory = getBestTheoryFromOptions(predicted_options);
 
-            if (t.delta + nextTheory.delta > bestDelta) {
+            int newDelta = t.delta + nextTheory.delta;
+
+            if (t.delta != 0 && t.delta == -nextTheory.delta) {
+                newDelta = -1;
+            }
+
+            if (newDelta > bestDelta) {
                 bestTheory = t;
-                bestDelta = t.delta + nextTheory.delta;
+                bestDelta = newDelta;
             }
         }
 
@@ -275,12 +279,12 @@ public class Planner {
         options.put(A, new Theory(status, A, status, -2000));
 
         for (Theory t : relevant_theories) {
-            //if (t.delta > options.get(t.action).delta) {
-            //    options.put(t.action, t);
-            //}
-            if (t.succesRateGet() > options.get(t.action).succesRateGet()) {
+            if (t.delta > options.get(t.action).delta) {
                 options.put(t.action, t);
             }
+            //if (t.successRateGet() > options.get(t.action).successRateGet()) {
+            //    options.put(t.action, t);
+            //}
         }
         return options;
     }
@@ -289,7 +293,11 @@ public class Planner {
         Theory best_theory = new Theory();
         double max_delta = -2000;
 
-        for (Theory t : options.values()) {
+        ArrayList<Theory> optionValues = new ArrayList<>();
+        optionValues.addAll(options.values());
+        Collections.shuffle(optionValues);
+
+        for (Theory t : optionValues) {
 
             if (t.delta < max_delta) {
                 continue;
@@ -322,8 +330,6 @@ public class Planner {
             }
         }
 
-
-        //int new_gain = calcGain(world, stateObs);
         int delta = computeDelta(world, stateObs);
 
         String s = previousStatus;
@@ -371,8 +377,9 @@ public class Planner {
 
         retracted.setConsequences(e_t2_string);
         retracted.setDelta(delta);
-        //retracted.setAppliedTimes(1);
-        //retracted.setSuccessTimes(1);
+
+        retracted.setAppliedTimes(1);
+        retracted.setSuccessTimes(1);
 
         //theories.addLast(retracted);
     }
@@ -398,8 +405,8 @@ public class Planner {
     }
 
     public void removeUnsuccess() {
-        //theories.removeIf(t -> (t.succesRateGet() == 1 && t.consequences.equals(t.causes)));
-        theories.removeIf(t -> t.succesRateGet() <= 0.1);
+        //theories.removeIf(t -> (t.successRateGet() == 1 && t.consequences.equals(t.causes)));
+        theories.removeIf(t -> t.successRateGet() <= 0.1);
     }
 
     private static class Theory {
@@ -473,23 +480,20 @@ public class Planner {
             this.successTimes = successTimes;
         }
 
-        public double succesRateGet() {
-            if (appliedTimes == 0) {
+        double successRateGet() {
+            if (appliedTimes == 0)
                 return 0;
-            }
 
             return (double) successTimes / appliedTimes;
         }
 
         boolean doesApplyTo(String status) {
             for (int i = 0; i < status.length(); i++) {
-                if (causes.charAt(i) == WILDCARD_CAUSES) {
+                if (causes.charAt(i) == WILDCARD_CAUSES)
                     continue;
-                }
 
-                if (causes.charAt(i) != status.charAt(i)) {
+                if (causes.charAt(i) != status.charAt(i))
                     return false;
-                }
             }
             return true;
         }
