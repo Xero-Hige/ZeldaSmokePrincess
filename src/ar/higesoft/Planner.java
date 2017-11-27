@@ -29,7 +29,7 @@ public class Planner {
 
     public static final int A = 0;
     static final char WILDCARD_CAUSES = '€';
-    public static final int AUTO_DELTA = -100;
+    public static final int AUTO_DELTA = -1;
 
     private String previousStatus;
     private String predictedStatus;
@@ -179,7 +179,7 @@ public class Planner {
 
         executed += 1;
         if (executed % 16 == 0) {
-            //removeDummys();
+            removeDummys();
             removeUnsuccess();
             removeDuplicated();
             generalizeTheories();
@@ -207,7 +207,7 @@ public class Planner {
 
             int newDelta = t.delta + nextTheory.delta;
 
-            if (t.delta != 0 && t.delta == -nextTheory.delta) {
+            if (t.delta != 0 && newDelta==0) {
                 newDelta = -1;
             }
 
@@ -217,7 +217,7 @@ public class Planner {
             }
         }
 
-        if (bestDelta < 0) {
+        if (bestDelta <= 0 || options.size() < 5) {
 
             int actions[] = {UP, DOWN, LEFT, RIGHT, A};
 
@@ -234,7 +234,12 @@ public class Planner {
 
         appliedTheory = bestTheory;
         previousStatus = status;
-        predictedStatus = bestTheory.consequences;//TODO: Check
+
+        char predicted[] = status.toCharArray();
+        char consequences[] = bestTheory.getConsequences().toCharArray();
+        predictNextState(predicted, consequences);
+        predictedStatus = new String(predicted);
+
         bestTheory.appliedTimes += 1;
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
@@ -279,14 +284,13 @@ public class Planner {
 
         HashMap<Integer, Theory> options = new HashMap<>();
 
-        options.put(UP, new Theory(status, UP, status, AUTO_DELTA));
-        options.put(DOWN, new Theory(status, DOWN, status, AUTO_DELTA));
-        options.put(LEFT, new Theory(status, LEFT, status, AUTO_DELTA));
-        options.put(RIGHT, new Theory(status, RIGHT, status, AUTO_DELTA));
-        options.put(A, new Theory(status, A, status, AUTO_DELTA));
-
         for (Theory t : relevant_theories) {
-            if (t.delta > options.get(t.action).delta) {
+            if (!options.containsKey(t.action)){
+                options.put(t.action, t);
+            }
+
+            Theory actionTheory = options.get(t.action);
+            if (t.delta  > actionTheory.delta) {
                 options.put(t.action, t);
             }
             //if (t.successRateGet() > options.get(t.action).successRateGet()) {
@@ -298,7 +302,7 @@ public class Planner {
 
     private Theory getBestTheoryFromOptions(HashMap<Integer, Theory> options) {
         Theory best_theory = new Theory();
-        double max_delta = AUTO_DELTA;
+        int max_delta = -10000;
 
         ArrayList<Theory> optionValues = new ArrayList<>();
         optionValues.addAll(options.values());
@@ -319,10 +323,14 @@ public class Planner {
     }
 
     public void updateTheories(String status, WorldStatus world, StateObservation stateObs) {
-        //System.out.println(String.format("Status: %s Action: %d", status, appliedTheory.action));
+
         if (appliedTheory == null) {
             return;
         }
+
+        System.out.println(String.format("Status: %s Action: %d", status, appliedTheory.action));
+        System.out.println(String.format("Predicted: %s Delta: %d", predictedStatus, appliedTheory.delta));
+
 
         int delta = computeDelta(world, stateObs);
 
@@ -331,6 +339,8 @@ public class Planner {
             appliedTheory.appliedTimes = 3;
             appliedTheory.successTimes = 3;
             appliedTheory.delta = delta;
+
+            theories.push(appliedTheory);
             return;
         }
 
@@ -354,7 +364,7 @@ public class Planner {
         String e = appliedTheory.consequences;
 
         if (wrong) {
-            retract(t, delta, s, s_p, e);
+            //retract(t, delta, s, s_p, e);
         }
 
         if (!wrong && delta != appliedTheory.delta) {
