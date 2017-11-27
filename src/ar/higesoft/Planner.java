@@ -29,6 +29,7 @@ public class Planner {
 
     public static final int A = 0;
     static final char WILDCARD_CAUSES = '€';
+    public static final int AUTO_DELTA = -100;
 
     private String previousStatus;
     private String predictedStatus;
@@ -180,6 +181,8 @@ public class Planner {
         if (executed % 16 == 0) {
             //removeDummys();
             removeUnsuccess();
+            removeDuplicated();
+            generalizeTheories();
         }
 
         HashMap<Integer, Theory> options = getAllOptionsAtState(status);
@@ -188,7 +191,11 @@ public class Planner {
         Theory bestTheory = new Theory();
         int bestDelta = -9999;
 
-        for (Theory t : options.values()) {
+        ArrayList<Theory> optionValues = new ArrayList<>();
+        optionValues.addAll(options.values());
+        Collections.shuffle(optionValues);
+
+        for (Theory t : optionValues) {
 
             char predictedStatus[] = status.toCharArray();
             char consequences[] = t.getConsequences().toCharArray();
@@ -272,11 +279,11 @@ public class Planner {
 
         HashMap<Integer, Theory> options = new HashMap<>();
 
-        options.put(UP, new Theory(status, UP, status, -2000));
-        options.put(DOWN, new Theory(status, DOWN, status, -2000));
-        options.put(LEFT, new Theory(status, LEFT, status, -2000));
-        options.put(RIGHT, new Theory(status, RIGHT, status, -2000));
-        options.put(A, new Theory(status, A, status, -2000));
+        options.put(UP, new Theory(status, UP, status, AUTO_DELTA));
+        options.put(DOWN, new Theory(status, DOWN, status, AUTO_DELTA));
+        options.put(LEFT, new Theory(status, LEFT, status, AUTO_DELTA));
+        options.put(RIGHT, new Theory(status, RIGHT, status, AUTO_DELTA));
+        options.put(A, new Theory(status, A, status, AUTO_DELTA));
 
         for (Theory t : relevant_theories) {
             if (t.delta > options.get(t.action).delta) {
@@ -291,7 +298,7 @@ public class Planner {
 
     private Theory getBestTheoryFromOptions(HashMap<Integer, Theory> options) {
         Theory best_theory = new Theory();
-        double max_delta = -2000;
+        double max_delta = AUTO_DELTA;
 
         ArrayList<Theory> optionValues = new ArrayList<>();
         optionValues.addAll(options.values());
@@ -317,6 +324,16 @@ public class Planner {
             return;
         }
 
+        int delta = computeDelta(world, stateObs);
+
+        if (appliedTheory.delta == 0) {
+            appliedTheory.consequences = status;
+            appliedTheory.appliedTimes = 3;
+            appliedTheory.successTimes = 3;
+            appliedTheory.delta = delta;
+            return;
+        }
+
         boolean wrong = false;
 
         for (int i = 0; i < predictedStatus.length(); i++) {
@@ -329,8 +346,6 @@ public class Planner {
                 break;
             }
         }
-
-        int delta = computeDelta(world, stateObs);
 
         String s = previousStatus;
         String s_p = status;
@@ -415,8 +430,8 @@ public class Planner {
         String consequences;
         int delta;
 
-        int appliedTimes = 0;
-        int successTimes = 0;
+        long appliedTimes = 0;
+        long successTimes = 0;
 
         Theory(String causes, int action, String consequences, int delta) {
             this.causes = causes;
@@ -464,19 +479,24 @@ public class Planner {
             this.action = action;
         }
 
-        public int getAppliedTimes() {
+        public long getAppliedTimes() {
+            if (appliedTimes > 10000) {
+                appliedTimes /= 2;
+                successTimes /= 2;
+            }
+
             return appliedTimes;
         }
 
-        public void setAppliedTimes(int appliedTimes) {
+        public void setAppliedTimes(long appliedTimes) {
             this.appliedTimes = appliedTimes;
         }
 
-        public int getSuccessTimes() {
+        public long getSuccessTimes() {
             return successTimes;
         }
 
-        public void setSuccessTimes(int successTimes) {
+        public void setSuccessTimes(long successTimes) {
             this.successTimes = successTimes;
         }
 
