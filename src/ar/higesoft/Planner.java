@@ -296,9 +296,10 @@ public class Planner {
             }
 
             Theory actionTheory = options.get(t.action);
-            if (t.delta > actionTheory.delta) {
+            if (t.delta * t.successRateGet() > actionTheory.delta * actionTheory.successRateGet()) {
                 options.put(t.action, t);
             }
+
             //if (t.successRateGet() > options.get(t.action).successRateGet()) {
             //    options.put(t.action, t);
             //}
