@@ -114,13 +114,21 @@ public class Planner {
                     }
                 }
 
-                Theory newTheory = new Theory(new String(causes), a.action, a.consequences, a.delta);
+                String causesString = new String(causes);
+                int count = causesString.length() - causesString.replace("€", "").length();
+
+                if (count == causesString.length()) {
+                    continue;
+                }
+
+                Theory newTheory = new Theory(causesString, a.action, a.consequences, a.delta);
                 newTheory.appliedTimes = a.appliedTimes + b.appliedTimes;
                 newTheory.successTimes = a.successTimes + b.successTimes;
 
                 newTheories.addLast(newTheory);
             }
         }
+
 
         for (Theory t : newTheories) {
             theories.addLast(t);
