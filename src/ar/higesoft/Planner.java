@@ -141,7 +141,6 @@ public class Planner {
         Theory a = theories.removeFirst();
         while (theories.size() > 0) {
             Theory b = theories.removeFirst();
-
             if (a.areEquals(b)) {
                 a.setAppliedTimes(a.getAppliedTimes() + b.getAppliedTimes());
                 a.setSuccessTimes(a.getSuccessTimes() + b.getSuccessTimes());
@@ -249,6 +248,14 @@ public class Planner {
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
         previousOrientation = stateObservation.getAvatarOrientation();
+        System.out.println("----");
+        System.out.println(status);
+        System.out.println(bestTheory.causes);
+        System.out.println(bestTheory.action);
+        System.out.println(bestTheory.delta);
+        System.out.println(bestTheory.consequences);
+        System.out.println(bestTheory.successRateGet());
+
         return bestTheory.action;
     }
 
@@ -296,6 +303,7 @@ public class Planner {
             }
 
             Theory actionTheory = options.get(t.action);
+
             if (t.delta * t.successRateGet() > actionTheory.delta * actionTheory.successRateGet()) {
                 options.put(t.action, t);
             }
@@ -339,7 +347,7 @@ public class Planner {
         //System.out.println(String.format("Predicted: %s Delta: %d", predictedStatus, appliedTheory.delta));
 
 
-        int delta = computeDelta(world, stateObs);
+        int delta = computeDelta(world, stateObs, status);
 
         if (appliedTheory.delta == 0) {
             appliedTheory.consequences = status;
@@ -413,16 +421,17 @@ public class Planner {
         }
 
         Theory retractedTheory = new Theory();
+        retractedTheory.setCauses(retracted.causes);
         retractedTheory.setConsequences(e_t2_string);
         retractedTheory.setDelta(delta);
-
+        retractedTheory.setAction(retracted.action);
         retractedTheory.setAppliedTimes(1);
         retractedTheory.setSuccessTimes(1);
 
         theories.addLast(retractedTheory);
     }
 
-    private int computeDelta(WorldStatus world, StateObservation stateObservation) {
+    private int computeDelta(WorldStatus world, StateObservation stateObservation, String status) {
         if (!world.isPlayerAlive()) { //Dead
             return -1000;
         }
@@ -435,11 +444,21 @@ public class Planner {
         int actualDistance = world.getDistanceToGoal();
 
         if (previousDistance == actualDistance) {
+            if (previousStatus.equals(status)) {
+                return -100;
+            }
+        }
+
+        if (previousDistance == actualDistance) {
             if (stateObservation.getGameScore() == previousScore)
                 return stateObservation.getAvatarOrientation() != previousOrientation ? -1 : -3;
-            return stateObservation.getGameScore() > previousScore ? 10 : -10;
+            return stateObservation.getGameScore() > previousScore ? 100 : -100;
         }
-        return previousDistance < actualDistance ? -2 : 3;
+
+        if (stateObservation.getGameScore() > previousScore) {
+            return 50; //Key
+        }
+        return previousDistance <= actualDistance ? -2 : 1;
     }
 
     public void removeUnsuccess() {
@@ -567,6 +586,12 @@ public class Planner {
             }
 
             return this.consequences.equals(other.consequences);
+        }
+
+        double trustRateGet() {
+            int count = causes.replace("€", "").length();
+
+            return (1.0 / causes.length()) * count;
         }
     }
 }
