@@ -397,15 +397,22 @@ public class Planner {
             }
         }
 
+
         String e_t2_string = new String(e_t2);
+        int count = e_t2_string.length() - e_t2_string.replace("€", "").length();
 
-        retracted.setConsequences(e_t2_string);
-        retracted.setDelta(delta);
+        if (count == e_t2.length) {
+            return;
+        }
 
-        retracted.setAppliedTimes(1);
-        retracted.setSuccessTimes(1);
+        Theory retractedTheory = new Theory();
+        retractedTheory.setConsequences(e_t2_string);
+        retractedTheory.setDelta(delta);
 
-        //theories.addLast(retracted);
+        retractedTheory.setAppliedTimes(1);
+        retractedTheory.setSuccessTimes(1);
+
+        theories.addLast(retractedTheory);
     }
 
     private int computeDelta(WorldStatus world, StateObservation stateObservation) {
