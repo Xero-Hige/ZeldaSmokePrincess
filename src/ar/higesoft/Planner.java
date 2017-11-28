@@ -22,12 +22,11 @@ import java.util.*;
  */
 public class Planner {
 
+    public static final int A = 0;
     static final int UP = 4;
     static final int DOWN = 3;
     static final int LEFT = 1;
     static final int RIGHT = 2;
-
-    public static final int A = 0;
     static final char WILDCARD_CAUSES = '€';
 
     private String previousStatus;
@@ -39,6 +38,13 @@ public class Planner {
     private int executed = 0;
     private Vector2d previousOrientation = new Vector2d(0, 0);
 
+
+    public Planner() {
+        theories = new LinkedList<>();
+        predictedStatus = "-";
+        previousStatus = "-";
+        appliedTheory = null;
+    }
 
     public String getPreviousStatus() {
         return previousStatus;
@@ -70,14 +76,6 @@ public class Planner {
 
     public void setTheories(LinkedList<Theory> theories) {
         this.theories = theories;
-    }
-
-
-    public Planner() {
-        theories = new LinkedList<>();
-        predictedStatus = "-";
-        previousStatus = "-";
-        appliedTheory = null;
     }
 
     public void cleanPlanner() {
@@ -214,7 +212,7 @@ public class Planner {
 
             int newDelta = t.delta + nextTheory.delta;
 
-            if (t.delta != 0 && newDelta==0) {
+            if (t.delta != 0 && newDelta == 0) {
                 newDelta = -1;
             }
 
@@ -266,15 +264,15 @@ public class Planner {
     }
 
     private HashMap<Integer, Theory> getAllOptionsAtState(String status) {
-        LinkedList<Theory> relevant_theories = new LinkedList<>();
+        LinkedList<Theory> relevantTheories = new LinkedList<>();
 
         for (Theory t : theories) {
             if (t.doesApplyTo(status)) {
-                relevant_theories.push(t);
+                relevantTheories.push(t);
             }
         }
 
-        if (relevant_theories.size() == 0) {
+        if (relevantTheories.size() == 0) {
 
             int actions[] = {UP, DOWN, LEFT, RIGHT, A};
             //TODO: Check
@@ -282,23 +280,23 @@ public class Planner {
                 Theory new_theory = new Theory(status, i, status, 0);
                 new_theory.appliedTimes = 1;
                 new_theory.successTimes = 1;
-                relevant_theories.push(new_theory);
+                relevantTheories.push(new_theory);
             }
 
-            for (Theory t : relevant_theories) {
+            for (Theory t : relevantTheories) {
                 theories.push(t);
             }
         }
 
         HashMap<Integer, Theory> options = new HashMap<>();
 
-        for (Theory t : relevant_theories) {
-            if (!options.containsKey(t.action)){
+        for (Theory t : relevantTheories) {
+            if (!options.containsKey(t.action)) {
                 options.put(t.action, t);
             }
 
             Theory actionTheory = options.get(t.action);
-            if (t.delta  > actionTheory.delta) {
+            if (t.delta > actionTheory.delta) {
                 options.put(t.action, t);
             }
             //if (t.successRateGet() > options.get(t.action).successRateGet()) {
