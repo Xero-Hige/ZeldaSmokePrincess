@@ -29,7 +29,6 @@ public class Planner {
 
     public static final int A = 0;
     static final char WILDCARD_CAUSES = '€';
-    public static final int AUTO_DELTA = -1;
 
     private String previousStatus;
     private String predictedStatus;
@@ -249,7 +248,8 @@ public class Planner {
 
     private void predictNextState(char[] predictedStatus, char[] consequences) {
         for (int i = 0; i < consequences.length; i++) {
-            if (consequences[i] == '-') {
+            if (consequences[i] == WILDCARD_CAUSES) {
+                predictedStatus[i] = WILDCARD_CAUSES;
                 continue;
             }
 
@@ -328,8 +328,8 @@ public class Planner {
             return;
         }
 
-        System.out.println(String.format("Status: %s Action: %d", status, appliedTheory.action));
-        System.out.println(String.format("Predicted: %s Delta: %d", predictedStatus, appliedTheory.delta));
+        //System.out.println(String.format("Status: %s Action: %d", status, appliedTheory.action));
+        //System.out.println(String.format("Predicted: %s Delta: %d", predictedStatus, appliedTheory.delta));
 
 
         int delta = computeDelta(world, stateObs);
@@ -347,7 +347,7 @@ public class Planner {
         boolean wrong = false;
 
         for (int i = 0; i < predictedStatus.length(); i++) {
-            if (predictedStatus.charAt(i) == '-') {
+            if (predictedStatus.charAt(i) == WILDCARD_CAUSES) {
                 continue;
             }
 
@@ -364,7 +364,7 @@ public class Planner {
         String e = appliedTheory.consequences;
 
         if (wrong) {
-            //retract(t, delta, s, s_p, e);
+            retract(t, delta, s, s_p, e);
         }
 
         if (!wrong && delta != appliedTheory.delta) {
@@ -388,13 +388,12 @@ public class Planner {
         char e_t2[] = e.toCharArray();
 
         for (int i = 0; i < predictedStatus.length(); i++) {
-            if (e.charAt(i) == '-') {
-                e_t2[i] = '-';
+            if (e.charAt(i) == WILDCARD_CAUSES) {
                 continue;
             }
 
             if (e.charAt(i) != s_p.charAt(i)) {
-                e_t2[i] = '-';
+                e_t2[i] = WILDCARD_CAUSES;
             }
         }
 
