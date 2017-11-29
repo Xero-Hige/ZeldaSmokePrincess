@@ -20,11 +20,11 @@ public class TestCeldas {
 
 
         //Other settings
-        boolean visuals = true;
+        boolean visuals = false;
         int seed = new Random().nextInt();
 
         //Zelda Game and level to play      
-        int levelIdx = 0; //level names from 0 to 4 (game_lvlN.txt).
+        int levelIdx = 1; //level names from 0 to 4 (game_lvlN.txt).
         String game = gamesPath + "zelda.txt";
         String level1 = gamesPath + "zelda_lvl" + levelIdx + ".txt";
 
@@ -35,10 +35,10 @@ public class TestCeldas {
         //ArcadeMachine.playOneGame(game, level1, recordActionsFile, seed);
 
         // 2. This plays a game in a level by the controller.
-        int iterations = visuals ? 1 : 100;
+        int iterations = visuals ? 1 : 200;
         for (int i = 0; i < iterations; i++) {
             seed = new Random().nextInt();
-            //levelIdx = i % 5;
+            levelIdx = i / 10 % 5;
             level1 = gamesPath + "zelda_lvl" + levelIdx + ".txt";
             System.out.println(String.format("Iteration %d --> Level %d", i,levelIdx+1));
             ArcadeMachine.runOneGame(game, level1, visuals, celdasAgent, recordActionsFile, seed, 0);

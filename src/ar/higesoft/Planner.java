@@ -184,6 +184,7 @@ public class Planner {
             removeUnsuccess();
             removeDuplicated();
             generalizeTheories();
+            removeDuplicated();
         }
 
         HashMap<Integer, Theory> options = getAllOptionsAtState(status);
@@ -474,7 +475,7 @@ public class Planner {
 
     public void removeUnsuccess() {
         //theories.removeIf(t -> (t.successRateGet() == 1 && t.consequences.equals(t.causes)));
-        //theories.removeIf(t -> t.successRateGet() <= 0.05);
+        theories.removeIf(t -> t.successRateGet() <= 0.1 && t.appliedTimes > 500);
     }
 
     private static class Theory {
