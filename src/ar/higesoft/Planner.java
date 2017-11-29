@@ -141,10 +141,7 @@ public class Planner {
         Theory a = theories.removeFirst();
         while (theories.size() > 0) {
             Theory b = theories.removeFirst();
-            if (a.areEquals(b)) {
-                a.setAppliedTimes(a.getAppliedTimes() + b.getAppliedTimes());
-                a.setSuccessTimes(a.getSuccessTimes() + b.getSuccessTimes());
-            } else {
+            if (!a.areEquals(b)) {
                 newTheories.addLast(a);
                 a = b;
             }
@@ -175,7 +172,7 @@ public class Planner {
                 return a1.causes.compareTo(a2.causes);
             }
 
-            return Double.compare(a2.successRateGet(), a1.successRateGet());
+            return Double.compare(a2.appliedTimes, a1.appliedTimes);
         };
     }
 
@@ -248,13 +245,13 @@ public class Planner {
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
         previousOrientation = stateObservation.getAvatarOrientation();
-        System.out.println("----");
-        System.out.println(status);
-        System.out.println(bestTheory.causes);
-        System.out.println(bestTheory.action);
-        System.out.println(bestTheory.delta);
-        System.out.println(bestTheory.consequences);
-        System.out.println(bestTheory.successRateGet());
+        //System.out.println("----");
+        //System.out.println(status);
+        //System.out.println(bestTheory.causes);
+        //System.out.println(bestTheory.action);
+        //System.out.println(bestTheory.delta);
+        //System.out.println(bestTheory.consequences);
+        //System.out.println(bestTheory.successRateGet());
 
         return bestTheory.action;
     }
@@ -304,7 +301,11 @@ public class Planner {
 
             Theory actionTheory = options.get(t.action);
 
-            if (t.delta * t.successRateGet() > actionTheory.delta * actionTheory.successRateGet()) {
+            //if (t.successRateGet() > actionTheory.successRateGet()) {
+            //    options.put(t.action, t);
+            //}
+
+            if (t.successRateGet() * t.trustRateGet() > actionTheory.successRateGet() * actionTheory.trustRateGet()) {
                 options.put(t.action, t);
             }
 
@@ -355,7 +356,7 @@ public class Planner {
             appliedTheory.successTimes = 3;
             appliedTheory.delta = delta;
 
-            theories.push(appliedTheory);
+            //theories.push(appliedTheory);
             return;
         }
 
@@ -383,7 +384,12 @@ public class Planner {
         }
 
         if (!wrong && delta != appliedTheory.delta) {
-            Theory newTheory = new Theory(appliedTheory.causes, appliedTheory.action, appliedTheory.consequences, delta);
+
+            Theory newTheory = new Theory(appliedTheory.causes,
+                    appliedTheory.action,
+                    appliedTheory.consequences,
+                    delta);
+
             newTheory.setSuccessTimes(1);
             newTheory.setAppliedTimes(1);
 
@@ -402,16 +408,21 @@ public class Planner {
     private void retract(Theory retracted, int delta, String s, String s_p, String e) {
         char e_t2[] = e.toCharArray();
 
+        int missmatch = 0;
         for (int i = 0; i < predictedStatus.length(); i++) {
             if (e.charAt(i) == WILDCARD_CAUSES) {
                 continue;
             }
 
             if (e.charAt(i) != s_p.charAt(i)) {
+                missmatch += 1;
                 e_t2[i] = WILDCARD_CAUSES;
             }
         }
 
+        if (missmatch == 0 || missmatch == s.length()) {
+            return;
+        }
 
         String e_t2_string = new String(e_t2);
         int count = e_t2_string.length() - e_t2_string.replace("€", "").length();
@@ -433,12 +444,12 @@ public class Planner {
 
     private int computeDelta(WorldStatus world, StateObservation stateObservation, String status) {
         if (!world.isPlayerAlive()) { //Dead
-            return -1000;
+            return -999;
         }
 
         //System.out.println(String.format("Ticks %d", stateObservation.getGameTick()));
         if (stateObservation.getGameTick() > 1999) { //Dead
-            return -1000;
+            return -999;
         }
 
         int actualDistance = world.getDistanceToGoal();
@@ -451,19 +462,19 @@ public class Planner {
 
         if (previousDistance == actualDistance) {
             if (stateObservation.getGameScore() == previousScore)
-                return stateObservation.getAvatarOrientation() != previousOrientation ? -1 : -3;
+                return stateObservation.getAvatarOrientation() != previousOrientation ? -1 : -100;
             return stateObservation.getGameScore() > previousScore ? 100 : -100;
         }
 
         if (stateObservation.getGameScore() > previousScore) {
             return 50; //Key
         }
-        return previousDistance <= actualDistance ? -2 : 1;
+        return previousDistance <= actualDistance ? -40 : 30;
     }
 
     public void removeUnsuccess() {
         //theories.removeIf(t -> (t.successRateGet() == 1 && t.consequences.equals(t.causes)));
-        theories.removeIf(t -> t.successRateGet() <= 0.1);
+        //theories.removeIf(t -> t.successRateGet() <= 0.05);
     }
 
     private static class Theory {
