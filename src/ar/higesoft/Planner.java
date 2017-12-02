@@ -246,14 +246,6 @@ public class Planner {
         previousDistance = world.getDistanceToGoal();
         previousScore = (int) stateObservation.getGameScore();
         previousOrientation = stateObservation.getAvatarOrientation();
-        //System.out.println("----");
-        //System.out.println(status);
-        //System.out.println(bestTheory.causes);
-        //System.out.println(bestTheory.action);
-        //System.out.println(bestTheory.delta);
-        //System.out.println(bestTheory.consequences);
-        //System.out.println(bestTheory.successRateGet());
-
         return bestTheory.action;
     }
 
@@ -280,7 +272,7 @@ public class Planner {
         if (relevantTheories.size() == 0) {
 
             int actions[] = {UP, DOWN, LEFT, RIGHT, A};
-            //TODO: Check
+
             for (int i : actions) {
                 Theory new_theory = new Theory(status, i, status, 0);
                 new_theory.appliedTimes = 1;
@@ -302,17 +294,9 @@ public class Planner {
 
             Theory actionTheory = options.get(t.action);
 
-            //if (t.successRateGet() > actionTheory.successRateGet()) {
-            //    options.put(t.action, t);
-            //}
-
             if (t.successRateGet() * t.trustRateGet() > actionTheory.successRateGet() * actionTheory.trustRateGet()) {
                 options.put(t.action, t);
             }
-
-            //if (t.successRateGet() > options.get(t.action).successRateGet()) {
-            //    options.put(t.action, t);
-            //}
         }
         return options;
     }
@@ -345,10 +329,6 @@ public class Planner {
             return;
         }
 
-        //System.out.println(String.format("Status: %s Action: %d", status, appliedTheory.action));
-        //System.out.println(String.format("Predicted: %s Delta: %d", predictedStatus, appliedTheory.delta));
-
-
         int delta = computeDelta(world, stateObs, status);
 
         if (appliedTheory.delta == 0) {
@@ -357,7 +337,6 @@ public class Planner {
             appliedTheory.successTimes = 3;
             appliedTheory.delta = delta;
 
-            //theories.push(appliedTheory);
             return;
         }
 
@@ -448,7 +427,6 @@ public class Planner {
             return -999;
         }
 
-        //System.out.println(String.format("Ticks %d", stateObservation.getGameTick()));
         if (stateObservation.getGameTick() > 1999) { //Dead
             return -999;
         }
@@ -474,7 +452,6 @@ public class Planner {
     }
 
     public void removeUnsuccess() {
-        //theories.removeIf(t -> (t.successRateGet() == 1 && t.consequences.equals(t.causes)));
         theories.removeIf(t -> t.successRateGet() <= 0.1 && t.appliedTimes > 500);
     }
 
